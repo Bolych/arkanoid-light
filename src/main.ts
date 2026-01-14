@@ -203,8 +203,11 @@ function gameLoop() {
     endGame()
   })
   
+  // Обновляем кирпичи (для fade-эффекта)
+  brickManager.update()
+  
   // Проверяем столкновения с кирпичами
-  const ballHit = brickManager.checkCollisions(
+  const collision = brickManager.checkCollisions(
     ball.getX(), 
     ball.getY(), 
     ball.getRadius(),
@@ -220,8 +223,8 @@ function gameLoop() {
   )
   
   // Если был удар по кирпичу, отскакиваем
-  if (ballHit) {
-    ball.bounceFromBrick()
+  if (collision.hit && collision.side) {
+    ball.bounceFromBrick(collision.side)
   }
 }
 

@@ -49,14 +49,15 @@ export class BrickManager {
     return types[randomIndex]
   }
 
-  public checkCollisions(ballX: number, ballY: number, ballRadius: number, onBrickDestroyed?: (points: number) => void): boolean {
-    let hit = false
+  public checkCollisions(ballX: number, ballY: number, ballRadius: number, onBrickDestroyed?: (points: number) => void): { hit: boolean, side: 'top' | 'bottom' | 'left' | 'right' | null } {
+    let result = { hit: false, side: null as 'top' | 'bottom' | 'left' | 'right' | null }
     
     for (const brick of this.bricks) {
-      if (brick.checkCollision(ballX, ballY, ballRadius)) {
+      const collision = brick.checkCollision(ballX, ballY, ballRadius)
+      if (collision.hit) {
         const points = brick.getPoints()
         brick.destroy()
-        hit = true
+        result = collision
         
         // Вызываем callback при разрушении кирпича с количеством очков
         if (onBrickDestroyed) {
@@ -67,7 +68,7 @@ export class BrickManager {
       }
     }
     
-    return hit
+    return result
   }
 
   public resize(newSceneWidth: number, newSceneHeight: number): void {
@@ -102,5 +103,12 @@ export class BrickManager {
     
     // Создаем новые кирпичи
     this.createBricks()
+  }
+
+  public update(): void {
+    // Обновляем все кирпичи (для fade-эффекта)
+    this.bricks.forEach(brick => {
+      brick.update()
+    })
   }
 }

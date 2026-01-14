@@ -8,6 +8,8 @@ export class Brick {
   private color: number
   private points: number
   public isDestroyed: boolean = false
+  private isFading: boolean = false
+  private fadeSpeed: number = 0.05 // Скорость исчезновения (чем выше, тем быстрее)
 
   constructor(x: number, y: number, width: number, height: number, color: number, points: number) {
     this.width = width
@@ -17,6 +19,7 @@ export class Brick {
     
     // Создаем графику кирпича
     this.graphics = new Graphics()
+    this.graphics.alpha = 1 // Начальная прозрачность
     this.draw()
     
     // Устанавливаем позицию
@@ -54,8 +57,22 @@ export class Brick {
   }
 
   public destroy(): void {
-    this.isDestroyed = true
-    this.graphics.visible = false
+    // Вместо мгновенного исчезновения запускаем fade-эффект
+    this.isFading = true
+  }
+
+  public update(): void {
+    // Если кирпич в процессе исчезновения
+    if (this.isFading) {
+      this.graphics.alpha -= this.fadeSpeed
+      
+      // Если прозрачность достигла нуля, помечаем как уничтоженный
+      if (this.graphics.alpha <= 0) {
+        this.graphics.alpha = 0
+        this.isDestroyed = true
+        this.graphics.visible = false
+      }
+    }
   }
 
   public getBounds() {
@@ -67,8 +84,9 @@ export class Brick {
     }
   }
 
-  public checkCollision(ballX: number, ballY: number, ballRadius: number): boolean {
-    if (this.isDestroyed) return false
+  public checkCollision(ballX: number, ballY: number, ballRadius: number): { hit: boolean, side: 'top' | 'bottom' | 'left' | 'right' | null } {
+    // Кирпич не может столкнуться, если он уничтожен или уже исчезает
+    if (this.isDestroyed || this.isFading) return { hit: false, side: null }
 
     const bounds = this.getBounds()
     
@@ -80,6 +98,31 @@ export class Brick {
     const distanceY = ballY - closestY
     const distanceSquared = distanceX * distanceX + distanceY * distanceY
     
-    return distanceSquared < (ballRadius * ballRadius)
+    if (distanceSquared >= (ballRadius * ballRadius)) {
+      return { hit: false, side: null }
+    }
+
+    // Определяем сторону столкновения
+    const centerX = bounds.x + bounds.width / 2
+    const centerY = bounds.y + bounds.height / 2
+    
+    const dx = ballX - centerX
+    const dy = ballY - centerY
+    
+    // Определяем, с какой стороны произошло столкновение
+    const widthRatio = Math.abs(dx) / bounds.width
+    const heightRatio = Math.abs(dy) / bounds.height
+    
+    let side: 'top' | 'bottom' | 'left' | 'right'
+    
+    if (widthRatio > heightRatio) {
+      // Столкновение слева или справа
+      side = dx > 0 ? 'right' : 'left'
+    } else {
+      // Столкновение сверху или снизу
+      side = dy > 0 ? 'bottom' : 'top'
+    }
+    
+    return { hit: true, side }
   }
 }

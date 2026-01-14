@@ -151,8 +151,18 @@ export class Ball {
     return this.radius
   }
 
-  public bounceFromBrick(): void {
-    // Отскок от кирпича (меняем направление по Y)
-    this.velocityY = -this.velocityY
+  public bounceFromBrick(side: 'top' | 'bottom' | 'left' | 'right'): void {
+    // Отскок от кирпича в зависимости от стороны столкновения
+    if (side === 'top' || side === 'bottom') {
+      // Столкновение сверху или снизу - меняем направление по Y
+      this.velocityY = -this.velocityY
+      // Отодвигаем шар от места столкновения
+      this.graphics.y += this.velocityY * 2
+    } else {
+      // Столкновение слева или справа - меняем направление по X
+      this.velocityX = -this.velocityX
+      // Отодвигаем шар от места столкновения
+      this.graphics.x += this.velocityX * 2
+    }
   }
 }
