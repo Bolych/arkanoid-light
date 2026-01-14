@@ -4,9 +4,19 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>arkanoid-test</title>
+    <title>Arkanoid Game</title>
   </head>
   <body>
+    <!-- Модальное окно для ввода имени -->
+    <div id="player-input-modal" class="modal">
+      <div class="modal-content">
+        <h2>Добро пожаловать в Arkanoid!</h2>
+        <p>Введите ваше имя:</p>
+        <input type="text" id="player-name" maxlength="20" placeholder="Ваше имя" />
+        <button id="start-game-btn">Начать игру</button>
+      </div>
+    </div>
+    
     <div id="app"></div>
     <script type="module" src="/src/main.ts"></script>
   </body>

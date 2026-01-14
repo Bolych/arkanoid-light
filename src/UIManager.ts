@@ -1,0 +1,119 @@
+import { Container, Text, TextStyle, Graphics } from 'pixi.js'
+import { LeaderboardManager } from './LeaderboardManager'
+
+export class UIManager {
+  private container: Container
+  private leaderboardManager: LeaderboardManager
+  private sceneWidth: number
+  private sceneHeight: number
+
+  constructor(sceneWidth: number, sceneHeight: number, leaderboardManager: LeaderboardManager) {
+    this.sceneWidth = sceneWidth
+    this.sceneHeight = sceneHeight
+    this.leaderboardManager = leaderboardManager
+    this.container = new Container()
+  }
+
+  public showGameOver(playerName: string, finalScore: number): Container {
+    const overlay = new Container()
+
+    // Полупрозрачный фон
+    const bg = new Graphics()
+    bg.rect(0, 0, this.sceneWidth, this.sceneHeight)
+    bg.fill({ color: 0x000000, alpha: 0.8 })
+    overlay.addChild(bg)
+
+    // Заголовок
+    const titleStyle = new TextStyle({
+      fontFamily: 'Arial, sans-serif',
+      fontSize: 48,
+      fontWeight: 'bold',
+      fill: 0xFFFFFF,
+      stroke: { color: 0x000000, width: 4 },
+    })
+
+    const title = new Text({
+      text: 'ИГРА ОКОНЧЕНА',
+      style: titleStyle
+    })
+    title.anchor.set(0.5)
+    title.x = this.sceneWidth / 2
+    title.y = 60
+    overlay.addChild(title)
+
+    // Имя игрока и счет
+    const scoreStyle = new TextStyle({
+      fontFamily: 'Arial, sans-serif',
+      fontSize: 28,
+      fill: 0xFFFF00,
+      stroke: { color: 0x000000, width: 3 },
+    })
+
+    const playerScoreText = new Text({
+      text: `${playerName}: ${finalScore} очков`,
+      style: scoreStyle
+    })
+    playerScoreText.anchor.set(0.5)
+    playerScoreText.x = this.sceneWidth / 2
+    playerScoreText.y = 130
+    overlay.addChild(playerScoreText)
+
+    // Топ-5 игроков
+    const leaderboardTitle = new Text({
+      text: 'ТОП-5 ИГРОКОВ',
+      style: new TextStyle({
+        fontFamily: 'Arial, sans-serif',
+        fontSize: 32,
+        fontWeight: 'bold',
+        fill: 0xFFFFFF,
+        stroke: { color: 0x000000, width: 3 },
+      })
+    })
+    leaderboardTitle.anchor.set(0.5)
+    leaderboardTitle.x = this.sceneWidth / 2
+    leaderboardTitle.y = 200
+    overlay.addChild(leaderboardTitle)
+
+    // Список топ-5
+    const topScores = this.leaderboardManager.getTopScores()
+    const entryStyle = new TextStyle({
+      fontFamily: 'Arial, sans-serif',
+      fontSize: 22,
+      fill: 0xFFFFFF,
+      stroke: { color: 0x000000, width: 2 },
+    })
+
+    topScores.forEach((entry, index) => {
+      const text = new Text({
+        text: `${index + 1}. ${entry.name} - ${entry.score} очков`,
+        style: entryStyle
+      })
+      text.anchor.set(0.5)
+      text.x = this.sceneWidth / 2
+      text.y = 260 + index * 40
+      overlay.addChild(text)
+    })
+
+    // Инструкция для рестарта
+    const restartText = new Text({
+      text: 'Нажмите ПРОБЕЛ для новой игры',
+      style: new TextStyle({
+        fontFamily: 'Arial, sans-serif',
+        fontSize: 20,
+        fill: 0xAAAAAA,
+        stroke: { color: 0x000000, width: 2 },
+      })
+    })
+    restartText.anchor.set(0.5)
+    restartText.x = this.sceneWidth / 2
+    restartText.y = this.sceneHeight - 50
+    overlay.addChild(restartText)
+
+    return overlay
+  }
+
+  public resize(newSceneWidth: number, newSceneHeight: number): void {
+    this.sceneWidth = newSceneWidth
+    this.sceneHeight = newSceneHeight
+  }
+}

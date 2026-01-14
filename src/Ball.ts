@@ -1,6 +1,7 @@
 import { Graphics } from 'pixi.js'
 import { GAME_CONFIG } from './constants'
 import { Paddle } from './Paddle'
+import { BrickManager } from './BrickManager'
 
 export class Ball {
   public graphics: Graphics
@@ -30,7 +31,7 @@ export class Ball {
     this.graphics.fill(GAME_CONFIG.BALL_COLOR)
   }
 
-  public update(paddle: Paddle): void {
+  public update(paddle: Paddle, onBallLost?: () => void): void {
     // Если шарик не запущен, он сидит на платформе
     if (!this.isLaunched) {
       const paddleX = paddle.getX()
@@ -62,12 +63,18 @@ export class Ball {
       this.velocityY = Math.abs(this.velocityY)
     }
 
+    // Проверка столкновения с кирпичами (будет обработано в gameLoop)
+    // Перенесено в main.ts для доступа к ScoreManager
+
     // Проверка столкновения с платформой
     this.checkPaddleCollision(paddle)
 
     // Если шарик улетел вниз за пределы экрана (проигрыш)
     if (this.graphics.y - this.radius > this.sceneHeight) {
-      this.reset()
+      // Вызываем callback о потере мяча (окончание игры)
+      if (onBallLost) {
+        onBallLost()
+      }
     }
   }
 
@@ -142,5 +149,10 @@ export class Ball {
 
   public getRadius(): number {
     return this.radius
+  }
+
+  public bounceFromBrick(): void {
+    // Отскок от кирпича (меняем направление по Y)
+    this.velocityY = -this.velocityY
   }
 }
