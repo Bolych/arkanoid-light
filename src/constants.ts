@@ -13,7 +13,7 @@ export const GAME_CONFIG = {
   
   // Шарик
   BALL_RADIUS: 8,          // Радиус шарика в пикселях
-  BALL_SPEED: 8,           // Скорость движения шарика
+  BALL_SPEED: 10,           // Скорость движения шарика
   BALL_COLOR: 0xFFFFFF,    // Белый цвет шарика
   BALL_START_Y: 0.7,       // Начальная позиция по Y (70% от высоты)
   
@@ -40,7 +40,7 @@ export const SCENE_CONFIG = {
   // Мобильные устройства
   MOBILE: {
     MAX_WIDTH: 450,
-    MAX_HEIGHT: 800,
+    MAX_HEIGHT: 2000, // Увеличено для поддержки высоких экранов
   },
   // Десктоп
   DESKTOP: {
@@ -49,6 +49,8 @@ export const SCENE_CONFIG = {
   },
   // Breakpoint для определения мобильного устройства
   MOBILE_BREAKPOINT: 768,
-  // Процент использования экрана
-  SCREEN_USAGE: 0.95,
+  // Процент использования экрана для мобильных (100% - во весь экран)
+  MOBILE_SCREEN_USAGE: 1.0,
+  // Процент использования экрана для десктопа (95% - с небольшим отступом)
+  DESKTOP_SCREEN_USAGE: 0.95,
 }

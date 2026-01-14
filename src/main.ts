@@ -25,32 +25,31 @@ function getGameSize() {
   const isMobile = window.innerWidth < SCENE_CONFIG.MOBILE_BREAKPOINT
   const isPortrait = window.innerHeight > window.innerWidth
   
-  let maxWidth: number
-  let maxHeight: number
-  
   if (isMobile || isPortrait) {
-    // Мобильная или портретная ориентация - узкая вертикальная сцена
-    maxWidth = SCENE_CONFIG.MOBILE.MAX_WIDTH
-    maxHeight = SCENE_CONFIG.MOBILE.MAX_HEIGHT
+    // Мобильная или портретная ориентация - на всю высоту экрана
+    const width = Math.min(window.innerWidth, SCENE_CONFIG.MOBILE.MAX_WIDTH)
+    const height = window.innerHeight // Используем всю высоту экрана
+    
+    return { width, height }
   } else {
-    // Десктоп - классический вертикальный формат Arkanoid
-    maxWidth = SCENE_CONFIG.DESKTOP.MAX_WIDTH
-    maxHeight = SCENE_CONFIG.DESKTOP.MAX_HEIGHT
+    // Десктоп - классический вертикальный формат Arkanoid с соотношением сторон
+    const maxWidth = SCENE_CONFIG.DESKTOP.MAX_WIDTH
+    const maxHeight = SCENE_CONFIG.DESKTOP.MAX_HEIGHT
+    const screenUsage = SCENE_CONFIG.DESKTOP_SCREEN_USAGE // 95% для десктопа
+    const aspectRatio = maxWidth / maxHeight
+
+    let width = Math.min(window.innerWidth * screenUsage, maxWidth)
+    let height = Math.min(window.innerHeight * screenUsage, maxHeight)
+
+    // Сохраняем соотношение сторон
+    if (width / height > aspectRatio) {
+      width = height * aspectRatio
+    } else {
+      height = width / aspectRatio
+    }
+
+    return { width, height }
   }
-  
-  const aspectRatio = maxWidth / maxHeight
-
-  let width = Math.min(window.innerWidth * SCENE_CONFIG.SCREEN_USAGE, maxWidth)
-  let height = Math.min(window.innerHeight * SCENE_CONFIG.SCREEN_USAGE, maxHeight)
-
-  // Сохраняем соотношение сторон
-  if (width / height > aspectRatio) {
-    width = height * aspectRatio
-  } else {
-    height = width / aspectRatio
-  }
-
-  return { width, height }
 }
 
 // Инициализируем приложение
@@ -94,6 +93,11 @@ async function init() {
 
   // Обработка нажатия пробела
   window.addEventListener('keydown', handleKeyDown)
+
+  // Обработка касания экрана (для запуска шара на мобильных)
+  window.addEventListener('touchstart', handleTouchStart)
+  // Обработка клика мыши (также для запуска шара)
+  window.addEventListener('click', handleClick)
 
   // Обработка изменения размера окна
   window.addEventListener('resize', handleResize)
@@ -140,6 +144,36 @@ function handleKeyDown(e: KeyboardEvent) {
     } else if (gameStateManager.getState() === 'GAME_OVER') {
       restartGame()
     }
+  }
+}
+
+// Обработка касания экрана
+function handleTouchStart(e: TouchEvent) {
+  // Проверяем, что касание не по элементам модального окна
+  const target = e.target as HTMLElement
+  if (target.closest('.modal')) {
+    return // Не обрабатываем касания по модальному окну
+  }
+
+  if (gameStateManager.getState() === 'PLAYING') {
+    ball.launch()
+  } else if (gameStateManager.getState() === 'GAME_OVER') {
+    restartGame()
+  }
+}
+
+// Обработка клика мыши
+function handleClick(e: MouseEvent) {
+  // Проверяем, что клик не по элементам модального окна
+  const target = e.target as HTMLElement
+  if (target.closest('.modal')) {
+    return // Не обрабатываем клики по модальному окну
+  }
+
+  if (gameStateManager.getState() === 'PLAYING') {
+    ball.launch()
+  } else if (gameStateManager.getState() === 'GAME_OVER') {
+    restartGame()
   }
 }
 

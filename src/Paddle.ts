@@ -11,6 +11,10 @@ export class Paddle {
   
   // Управление клавиатурой
   private keys: { [key: string]: boolean } = {}
+  
+  // Управление касанием для мобильных устройств
+  private touchTargetX: number | null = null
+  private canvasElement: HTMLCanvasElement | null = null
 
   constructor(sceneWidth: number, sceneHeight: number) {
     this.sceneWidth = sceneWidth
@@ -30,6 +34,9 @@ export class Paddle {
     
     // Настраиваем обработку клавиатуры
     this.setupKeyboardControls()
+    
+    // Настраиваем обработку касаний для мобильных устройств
+    this.setupTouchControls()
   }
 
   private draw(): void {
@@ -49,15 +56,98 @@ export class Paddle {
     })
   }
 
-  public update(): void {
-    // Движение влево
-    if (this.keys['ArrowLeft'] || this.keys['KeyA']) {
-      this.graphics.x -= this.speed
-    }
+  private setupTouchControls(): void {
+    // Получаем canvas элемент
+    setTimeout(() => {
+      this.canvasElement = document.querySelector('canvas')
+      
+      if (this.canvasElement) {
+        // Обработка касаний (touchstart, touchmove)
+        this.canvasElement.addEventListener('touchstart', (e) => {
+          e.preventDefault()
+          this.handleTouchMove(e)
+        })
+
+        this.canvasElement.addEventListener('touchmove', (e) => {
+          e.preventDefault()
+          this.handleTouchMove(e)
+        })
+
+        this.canvasElement.addEventListener('touchend', () => {
+          this.touchTargetX = null
+        })
+
+        // Обработка мыши (для тестирования на десктопе и реальная поддержка мыши)
+        this.canvasElement.addEventListener('mousemove', (e) => {
+          this.handleMouseMove(e)
+        })
+
+        this.canvasElement.addEventListener('mousedown', (e) => {
+          this.handleMouseMove(e)
+        })
+
+        this.canvasElement.addEventListener('mouseleave', () => {
+          this.touchTargetX = null
+        })
+      }
+    }, 100)
+  }
+
+  private handleTouchMove(e: TouchEvent): void {
+    if (!this.canvasElement || e.touches.length === 0) return
+
+    const touch = e.touches[0]
+    const rect = this.canvasElement.getBoundingClientRect()
     
-    // Движение вправо
-    if (this.keys['ArrowRight'] || this.keys['KeyD']) {
-      this.graphics.x += this.speed
+    // Переводим координаты касания в координаты игры
+    const canvasX = touch.clientX - rect.left
+    const scaleX = this.sceneWidth / rect.width
+    
+    // Устанавливаем целевую позицию с учетом центра платформы
+    this.touchTargetX = canvasX * scaleX - this.width / 2
+  }
+
+  private handleMouseMove(e: MouseEvent): void {
+    if (!this.canvasElement) return
+
+    const rect = this.canvasElement.getBoundingClientRect()
+    
+    // Переводим координаты мыши в координаты игры
+    const canvasX = e.clientX - rect.left
+    const scaleX = this.sceneWidth / rect.width
+    
+    // Устанавливаем целевую позицию с учетом центра платформы
+    this.touchTargetX = canvasX * scaleX - this.width / 2
+  }
+
+  public update(): void {
+    // Приоритет у касания/мыши - если есть целевая позиция, двигаемся к ней
+    if (this.touchTargetX !== null) {
+      const diff = this.touchTargetX - this.graphics.x
+      const moveSpeed = this.speed * 1.5 // Немного быстрее для касания
+      
+      if (Math.abs(diff) > 2) {
+        // Плавно двигаемся к целевой позиции
+        if (diff > 0) {
+          this.graphics.x += Math.min(moveSpeed, diff)
+        } else {
+          this.graphics.x += Math.max(-moveSpeed, diff)
+        }
+      } else {
+        // Если очень близко, просто устанавливаем позицию
+        this.graphics.x = this.touchTargetX
+      }
+    } else {
+      // Управление клавиатурой (только если нет касания)
+      // Движение влево
+      if (this.keys['ArrowLeft'] || this.keys['KeyA']) {
+        this.graphics.x -= this.speed
+      }
+      
+      // Движение вправо
+      if (this.keys['ArrowRight'] || this.keys['KeyD']) {
+        this.graphics.x += this.speed
+      }
     }
 
     // Ограничиваем движение границами поля

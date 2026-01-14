@@ -28,10 +28,22 @@ body {
   overflow: hidden;
   width: 100vw;
   height: 100vh;
+  /* Для iOS Safari - использовать всю высоту экрана */
+  height: 100dvh;
   display: flex;
   justify-content: center;
   align-items: center;
   background-color: #1a1a1a;
+  /* Предотвращаем выделение на мобильных устройствах */
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  /* Предотвращаем bouncing эффект на iOS */
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
 }
 
 h1 {
@@ -43,6 +55,8 @@ h1 {
   display: flex;
   justify-content: center;
   align-items: center;
+  width: 100%;
+  height: 100%;
 }
 
 #app canvas {
@@ -167,6 +181,25 @@ button:hover {
 button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
+}
+
+/* Стили для мобильных устройств */
+@media (max-width: 768px) {
+  body {
+    /* Убираем центрирование на мобильных - игра займет весь экран */
+    align-items: flex-start;
+  }
+
+  #app {
+    width: 100%;
+    height: 100%;
+    align-items: flex-start;
+  }
+
+  #app canvas {
+    /* Убираем тень на мобильных - игра во весь экран */
+    box-shadow: none;
+  }
 }
 
 @media (prefers-color-scheme: light) {
