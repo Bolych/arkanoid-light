@@ -65,6 +65,9 @@ export class Game {
       scoreSystem: this.scoreSystem
     })
 
+    // Ensure visuals are positioned before the game starts.
+    this.world.update(0)
+
     this.gameInputHandler = new GameInputHandler({
       world: this.world,
       app: this.app,
