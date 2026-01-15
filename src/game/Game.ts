@@ -2,14 +2,14 @@ import { Application } from 'pixi.js'
 import { LeaderboardManager } from '../LeaderboardManager'
 import { UIManager } from '../ui/UIManager.js'
 import { GameInputHandler } from './GameInputHandler.js'
-import { ResizeHandler } from '../platform/ResizeHandler.ts'
 import { GameFlowController } from './GameFlowController.js'
-import { ResizeApplier } from '../platform/ResizeApplier.ts'
+import { ResizeManager } from '../platform/ResizeManager.ts'
 import { GameSpawner } from './GameSpawner.js'
 import { setupGameSystems } from './GameSystems.js'
 import { world } from '../ecs/entities/index.js'
 import type { Entity } from '../ecs/entities/index.js'
 import { World } from '../ecs/World'
+import { GAME_CONFIG } from '../constants'
 import type { ScoreSystem, GameStateSystem } from '../ecs/systems'
 
 export class Game {
@@ -21,9 +21,8 @@ export class Game {
   private leaderboardManager!: LeaderboardManager
   private uiManager!: UIManager
   private gameInputHandler!: GameInputHandler
-  private resizeHandler!: ResizeHandler
+  private resizeManager!: ResizeManager
   private flowController!: GameFlowController
-  private resizeApplier!: ResizeApplier
   private spawner!: GameSpawner
 
   private gameStateSystem!: GameStateSystem
@@ -35,14 +34,12 @@ export class Game {
   }
 
   async init(): Promise<void> {
-    this.resizeHandler = new ResizeHandler()
-    this.resizeHandler.addListener((width, height) => this.resizeApplier.apply(width, height))
-    const { width, height } = this.resizeHandler.getGameSize()
+    const { width, height } = ResizeManager.getGameSize()
 
     await this.app.init({
       width,
       height,
-      background: 0x808080,
+      background: GAME_CONFIG.GAME_BACKGROUND_COLOR,
     })
 
     const appDiv = document.querySelector<HTMLDivElement>('#app')!
@@ -50,9 +47,8 @@ export class Game {
 
     this.leaderboardManager = new LeaderboardManager()
     this.uiManager = new UIManager(this.app.screen.width, this.app.screen.height, this.leaderboardManager)
-    this.resizeApplier = new ResizeApplier({ app: this.app, world: this.world, uiManager: this.uiManager })
-
-    this.resizeHandler.setupEventListener()
+    this.resizeManager = new ResizeManager({ app: this.app, world: this.world, uiManager: this.uiManager })
+    this.resizeManager.setupEventListener()
   }
 
   run(): void {
@@ -71,6 +67,7 @@ export class Game {
 
     this.gameInputHandler = new GameInputHandler({
       world: this.world,
+      app: this.app,
       onRestartGame: () => this.flowController.restartGame(),
       getGameState: () => this.gameStateSystem.getState()
     })
@@ -85,15 +82,7 @@ export class Game {
     const { scoreSystem, gameStateSystem } = setupGameSystems({
       world: this.world,
       app: this.app,
-      onBrickDestroyed: (points: number) => {
-        scoreSystem.addPoints(points)
-      },
-      onBallLost: () => {
-        this.flowController.endGame()
-      },
-      onAllBricksDestroyed: () => {
-        this.flowController.endGame()
-      }
+      onGameEnd: () => this.flowController.endGame()
     })
     this.scoreSystem = scoreSystem
     this.gameStateSystem = gameStateSystem
@@ -105,4 +94,5 @@ export class Game {
     }
     this.world.update(deltaTime)
   }
+
 }

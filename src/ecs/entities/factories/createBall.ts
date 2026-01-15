@@ -15,6 +15,8 @@ export function createBall(
   const graphics = new Graphics()
   graphics.circle(0, 0, radius)
   graphics.fill(GAME_CONFIG.BALL_COLOR)
+  graphics.circle(0, 0, radius)
+  graphics.stroke({ width: GAME_CONFIG.BALL_STROKE_WIDTH, color: GAME_CONFIG.BALL_STROKE_COLOR })
 
   const entity = world.add({
     position: { x, y },

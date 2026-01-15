@@ -1,5 +1,6 @@
 import { Text, TextStyle, Graphics, Container } from 'pixi.js'
 import { World } from '../../World'
+import { GAME_CONFIG, UI_LAYOUT } from '../../../constants'
 import type { Entity } from '../index.js'
 
 export function createScore(
@@ -10,15 +11,18 @@ export function createScore(
   const uiContainer = new Container()
 
   const uiBackground = new Graphics()
-  uiBackground.rect(0, 0, sceneWidth, 50)
-  uiBackground.fill({ color: 0x2C3E50, alpha: 0.95 })
+  uiBackground.rect(0, 0, sceneWidth, UI_LAYOUT.SCORE_PANEL_HEIGHT)
+  uiBackground.fill({
+    color: GAME_CONFIG.SCORE_PANEL_COLOR,
+    alpha: GAME_CONFIG.SCORE_PANEL_ALPHA
+  })
   uiContainer.addChild(uiBackground)
 
   const nameStyle = new TextStyle({
     fontFamily: 'Arial, sans-serif',
     fontSize: 20,
     fontWeight: 'bold',
-    fill: 0xFFFF00,
+    fill: GAME_CONFIG.SCORE_NAME_COLOR,
   })
 
   const playerNameText = new Text({
@@ -33,7 +37,7 @@ export function createScore(
     fontFamily: 'Arial, sans-serif',
     fontSize: 20,
     fontWeight: 'bold',
-    fill: 0xFFFFFF,
+    fill: GAME_CONFIG.SCORE_VALUE_COLOR,
   })
 
   const scoreText = new Text({

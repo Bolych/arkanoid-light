@@ -1,7 +1,6 @@
 import { World, type System } from '../World'
 import type { Entity } from '../entities/index.js'
 import { GAME_CONFIG } from '../../constants'
-import { getDarkerColor } from '../entities/factories/utils'
 
 export class ResizeSystem implements System {
   private world: World<Entity>
@@ -90,6 +89,11 @@ export class ResizeSystem implements System {
     graphics.clear()
     graphics.roundRect(0, 0, width, height, 5)
     graphics.fill(GAME_CONFIG.PADDLE_COLOR)
+    graphics.roundRect(0, 0, width, height, 5)
+    graphics.stroke({
+      width: GAME_CONFIG.PADDLE_STROKE_WIDTH,
+      color: GAME_CONFIG.PADDLE_STROKE_COLOR
+    })
   }
 
   private redrawBrickGraphics(brick: Entity, width: number, height: number): void {
@@ -102,8 +106,11 @@ export class ResizeSystem implements System {
     graphics.roundRect(0, 0, width, height, 3)
     graphics.fill(color)
     
-    const darkerColor = getDarkerColor(color)
     graphics.roundRect(0, 0, width, height, 3)
-    graphics.stroke({ width: 2, color: darkerColor })
+    graphics.stroke({
+      width: 2,
+      color: GAME_CONFIG.BRICK_STROKE_COLOR,
+      alpha: GAME_CONFIG.BRICK_STROKE_ALPHA
+    })
   }
 }

@@ -17,17 +17,13 @@ import {
 type GameSystemsDeps = {
   world: World<Entity>
   app: Application
-  onBrickDestroyed: (points: number) => void
-  onBallLost: () => void
-  onAllBricksDestroyed: () => void
+  onGameEnd: () => void
 }
 
 export const setupGameSystems = ({
   world,
   app,
-  onBrickDestroyed,
-  onBallLost,
-  onAllBricksDestroyed
+  onGameEnd
 }: GameSystemsDeps): {
   scoreSystem: ScoreSystem
   gameStateSystem: GameStateSystem
@@ -37,14 +33,18 @@ export const setupGameSystems = ({
   const gameStateSystem = new GameStateSystem(world)
   const resizeSystem = new ResizeSystem(world)
 
-  world.addSystem(new InputSystem(world, app.canvas, app.screen.width))
+  const handleBrickDestroyed = (points: number) => {
+    scoreSystem.addPoints(points)
+  }
+
+  world.addSystem(new InputSystem(world, app.canvas, app.screen.width, app.screen.height))
   world.addSystem(new PaddleMovementSystem(world))
   world.addSystem(new BallLaunchSystem(world))
   world.addSystem(new BallMovementSystem(world))
   world.addSystem(new CollisionSystem(world, {
-    onBrickDestroyed,
-    onBallLost,
-    onAllBricksDestroyed
+    onBrickDestroyed: handleBrickDestroyed,
+    onBallLost: onGameEnd,
+    onAllBricksDestroyed: onGameEnd
   }))
   world.addSystem(new ScoreUISystem(world))
   world.addSystem(new RenderSystem(world))

@@ -1,22 +1,26 @@
 import { World, type System } from '../World'
 import type { Entity } from '../entities/index.js'
+import { UI_LAYOUT } from '../../constants'
 
 interface InputEvent {
   type: 'keydown' | 'keyup' | 'pointermove' | 'pointerdown' | 'pointerup' | 'pointerleave'
   key?: string
   clientX?: number
+  clientY?: number
 }
 
 export class InputSystem implements System {
   private world: World<Entity>
   private canvasElement: HTMLCanvasElement
   private sceneWidth: number
+  private sceneHeight: number
   private inputBuffer: InputEvent[] = []
 
-  constructor(world: World<Entity>, canvas: HTMLCanvasElement, sceneWidth: number) {
+  constructor(world: World<Entity>, canvas: HTMLCanvasElement, sceneWidth: number, sceneHeight: number) {
     this.world = world
     this.canvasElement = canvas
     this.sceneWidth = sceneWidth
+    this.sceneHeight = sceneHeight
     this.setupEventListeners()
   }
 
@@ -37,14 +41,14 @@ export class InputSystem implements System {
     this.canvasElement.addEventListener('touchstart', (e) => {
       e.preventDefault()
       const touch = e.touches[0]
-      this.inputBuffer.push({ type: 'pointerdown', clientX: touch.clientX })
-      this.inputBuffer.push({ type: 'pointermove', clientX: touch.clientX })
+      this.inputBuffer.push({ type: 'pointerdown', clientX: touch.clientX, clientY: touch.clientY })
+      this.inputBuffer.push({ type: 'pointermove', clientX: touch.clientX, clientY: touch.clientY })
     })
 
     this.canvasElement.addEventListener('touchmove', (e) => {
       e.preventDefault()
       const touch = e.touches[0]
-      this.inputBuffer.push({ type: 'pointermove', clientX: touch.clientX })
+      this.inputBuffer.push({ type: 'pointermove', clientX: touch.clientX, clientY: touch.clientY })
     })
 
     this.canvasElement.addEventListener('touchend', () => {
@@ -52,12 +56,12 @@ export class InputSystem implements System {
     })
 
     this.canvasElement.addEventListener('mousedown', (e) => {
-      this.inputBuffer.push({ type: 'pointerdown', clientX: e.clientX })
-      this.inputBuffer.push({ type: 'pointermove', clientX: e.clientX })
+      this.inputBuffer.push({ type: 'pointerdown', clientX: e.clientX, clientY: e.clientY })
+      this.inputBuffer.push({ type: 'pointermove', clientX: e.clientX, clientY: e.clientY })
     })
 
     this.canvasElement.addEventListener('mousemove', (e) => {
-      this.inputBuffer.push({ type: 'pointermove', clientX: e.clientX })
+      this.inputBuffer.push({ type: 'pointermove', clientX: e.clientX, clientY: e.clientY })
     })
 
     this.canvasElement.addEventListener('mouseup', () => {
@@ -100,6 +104,9 @@ export class InputSystem implements System {
         break
 
       case 'pointermove':
+        if (!this.isPointerInGameArea(event.clientY)) {
+          return
+        }
         if (event.clientX !== undefined && paddle.isMouseDown) {
           const targetX = this.calculateTargetX(event.clientX, size.width)
           paddle.touchTargetX = targetX
@@ -107,6 +114,9 @@ export class InputSystem implements System {
         break
 
       case 'pointerdown':
+        if (!this.isPointerInGameArea(event.clientY)) {
+          return
+        }
         paddle.isMouseDown = true
         if (event.clientX !== undefined) {
           const targetX = this.calculateTargetX(event.clientX, size.width)
@@ -130,7 +140,20 @@ export class InputSystem implements System {
     return canvasX * scaleX - paddleWidth / 2
   }
 
-  public resize(newSceneWidth: number): void {
+  private isPointerInGameArea(clientY?: number): boolean {
+    if (clientY === undefined) {
+      return true
+    }
+    const rect = this.canvasElement.getBoundingClientRect()
+    if (clientY < rect.top || clientY > rect.bottom) {
+      return false
+    }
+    const canvasY = (clientY - rect.top) * (this.sceneHeight / rect.height)
+    return canvasY > UI_LAYOUT.SCORE_PANEL_HEIGHT
+  }
+
+  public resize(newSceneWidth: number, newSceneHeight: number): void {
     this.sceneWidth = newSceneWidth
+    this.sceneHeight = newSceneHeight
   }
 }

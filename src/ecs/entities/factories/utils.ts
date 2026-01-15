@@ -5,14 +5,3 @@ export function getRandomBrickType(): { color: number; points: number } {
   return types[randomIndex]
 }
 
-export function getDarkerColor(color: number, factor = 0.7): number {
-  const r = (color >> 16) & 0xff
-  const g = (color >> 8) & 0xff
-  const b = color & 0xff
-
-  const darkerR = Math.floor(r * factor)
-  const darkerG = Math.floor(g * factor)
-  const darkerB = Math.floor(b * factor)
-
-  return (darkerR << 16) | (darkerG << 8) | darkerB
-}

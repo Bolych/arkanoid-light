@@ -1,7 +1,7 @@
 import { Graphics } from 'pixi.js'
 import { World } from '../../World'
 import type { Entity } from '../index.js'
-import { getDarkerColor } from './utils'
+import { GAME_CONFIG } from '../../../constants'
 export function createBrick(
   world: World<Entity>,
   x: number,
@@ -17,9 +17,12 @@ export function createBrick(
   graphics.roundRect(0, 0, width, height, 3)
   graphics.fill(color)
 
-  const darkerColor = getDarkerColor(color)
   graphics.roundRect(0, 0, width, height, 3)
-  graphics.stroke({ width: 2, color: darkerColor })
+  graphics.stroke({
+    width: 2,
+    color: GAME_CONFIG.BRICK_STROKE_COLOR,
+    alpha: GAME_CONFIG.BRICK_STROKE_ALPHA
+  })
 
   const entity = world.add({
     position: { x, y },

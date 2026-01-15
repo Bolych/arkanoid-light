@@ -1,6 +1,7 @@
 import { World, type System } from '../World'
 import type { Entity } from '../entities/index.js'
 import { Text, Graphics } from 'pixi.js'
+import { GAME_CONFIG, UI_LAYOUT } from '../../constants'
 
 export class ScoreUISystem implements System {
   private world: World<Entity>
@@ -28,7 +29,7 @@ export class ScoreUISystem implements System {
       const newScoreText = `Очки: ${score.value}`
       if (scoreText.text !== newScoreText) {
         scoreText.text = newScoreText
-        scoreText.x = bounds.width - scoreText.width - 15
+      scoreText.x = bounds.width - scoreText.width - 15
       }
     }
   }
@@ -44,8 +45,11 @@ export class ScoreUISystem implements System {
 
       const background = container.children[0] as Graphics
       background.clear()
-      background.rect(0, 0, newWidth, 50)
-      background.fill({ color: 0x2C3E50, alpha: 0.95 })
+      background.rect(0, 0, newWidth, UI_LAYOUT.SCORE_PANEL_HEIGHT)
+      background.fill({
+        color: GAME_CONFIG.SCORE_PANEL_COLOR,
+        alpha: GAME_CONFIG.SCORE_PANEL_ALPHA
+      })
 
       const scoreText = container.children[2] as Text
       scoreText.x = newWidth - scoreText.width - 15

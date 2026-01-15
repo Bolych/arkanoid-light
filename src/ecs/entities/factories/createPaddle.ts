@@ -15,6 +15,11 @@ export function createPaddle(
   const graphics = new Graphics()
   graphics.roundRect(0, 0, width, height, 5)
   graphics.fill(GAME_CONFIG.PADDLE_COLOR)
+  graphics.roundRect(0, 0, width, height, 5)
+  graphics.stroke({
+    width: GAME_CONFIG.PADDLE_STROKE_WIDTH,
+    color: GAME_CONFIG.PADDLE_STROKE_COLOR
+  })
 
   const entity = world.add({
     position: { x, y },
