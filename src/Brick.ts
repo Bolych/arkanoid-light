@@ -8,8 +8,6 @@ export class Brick {
   private color: number
   private points: number
   public isDestroyed: boolean = false
-  private isFading: boolean = false
-  private fadeSpeed: number = 0.05 // Скорость исчезновения (чем выше, тем быстрее)
   public row: number // Позиция в сетке
   public col: number // Позиция в сетке
 
@@ -23,7 +21,6 @@ export class Brick {
     
     // Создаем графику кирпича
     this.graphics = new Graphics()
-    this.graphics.alpha = 1 // Начальная прозрачность
     this.draw()
     
     // Устанавливаем позицию
@@ -61,22 +58,8 @@ export class Brick {
   }
 
   public destroy(): void {
-    // Вместо мгновенного исчезновения запускаем fade-эффект
-    this.isFading = true
-  }
-
-  public update(): void {
-    // Если кирпич в процессе исчезновения
-    if (this.isFading) {
-      this.graphics.alpha -= this.fadeSpeed
-      
-      // Если прозрачность достигла нуля, помечаем как уничтоженный
-      if (this.graphics.alpha <= 0) {
-        this.graphics.alpha = 0
-        this.isDestroyed = true
-        this.graphics.visible = false
-      }
-    }
+    this.isDestroyed = true
+    this.graphics.visible = false
   }
 
   public getBounds() {
@@ -102,8 +85,8 @@ export class Brick {
   }
 
   public checkCollision(ballX: number, ballY: number, ballRadius: number): { hit: boolean, side: 'top' | 'bottom' | 'left' | 'right' | null } {
-    // Кирпич не может столкнуться, если он уничтожен или уже исчезает
-    if (this.isDestroyed || this.isFading) return { hit: false, side: null }
+    // Кирпич не может столкнуться, если он уничтожен
+    if (this.isDestroyed) return { hit: false, side: null }
 
     const bounds = this.getBounds()
     

@@ -77,7 +77,6 @@ export class BrickManager {
     this.sceneHeight = newSceneHeight
     
     // Пересчитываем параметры сетки
-    const rows = GAME_CONFIG.BRICK_ROWS
     const cols = GAME_CONFIG.BRICK_COLS
     const padding = GAME_CONFIG.BRICK_PADDING
     const offsetX = this.sceneWidth * GAME_CONFIG.BRICK_OFFSET_X
@@ -112,12 +111,5 @@ export class BrickManager {
     
     // Создаем новые кирпичи
     this.createBricks()
-  }
-
-  public update(): void {
-    // Обновляем все кирпичи (для fade-эффекта)
-    this.bricks.forEach(brick => {
-      brick.update()
-    })
   }
 }

@@ -6,7 +6,6 @@ export class Paddle {
   private width: number
   private height: number
   private sceneWidth: number
-  private sceneHeight: number
   private speed: number = GAME_CONFIG.PADDLE_SPEED
   
   // Управление клавиатурой
@@ -14,12 +13,12 @@ export class Paddle {
   
   // Управление касанием для мобильных устройств
   private touchTargetX: number | null = null
-  private canvasElement: HTMLCanvasElement | null = null
+  private canvasElement: HTMLCanvasElement
   private isMouseDown: boolean = false
 
-  constructor(sceneWidth: number, sceneHeight: number) {
+  constructor(sceneWidth: number, sceneHeight: number, canvas: HTMLCanvasElement) {
     this.sceneWidth = sceneWidth
-    this.sceneHeight = sceneHeight
+    this.canvasElement = canvas
     
     // Размеры платформы
     this.width = sceneWidth * GAME_CONFIG.PADDLE_WIDTH
@@ -58,73 +57,52 @@ export class Paddle {
   }
 
   private setupTouchControls(): void {
-    // Получаем canvas элемент
-    setTimeout(() => {
-      this.canvasElement = document.querySelector('canvas')
-      
-      if (this.canvasElement) {
-        // Обработка касаний (touchstart, touchmove)
-        this.canvasElement.addEventListener('touchstart', (e) => {
-          e.preventDefault()
-          this.handleTouchMove(e)
-        })
+    // Обработка касаний (touchstart, touchmove)
+    this.canvasElement.addEventListener('touchstart', (e) => {
+      e.preventDefault()
+      const touch = e.touches[0]
+      this.handlePointerMove(touch.clientX)
+    })
 
-        this.canvasElement.addEventListener('touchmove', (e) => {
-          e.preventDefault()
-          this.handleTouchMove(e)
-        })
+    this.canvasElement.addEventListener('touchmove', (e) => {
+      e.preventDefault()
+      const touch = e.touches[0]
+      this.handlePointerMove(touch.clientX)
+    })
 
-        this.canvasElement.addEventListener('touchend', () => {
-          this.touchTargetX = null
-        })
+    this.canvasElement.addEventListener('touchend', () => {
+      this.touchTargetX = null
+    })
 
-        // Обработка мыши (работает только при зажатой кнопке)
-        this.canvasElement.addEventListener('mousedown', (e) => {
-          this.isMouseDown = true
-          this.handleMouseMove(e)
-        })
+    // Обработка мыши (работает только при зажатой кнопке)
+    this.canvasElement.addEventListener('mousedown', (e) => {
+      this.isMouseDown = true
+      this.handlePointerMove(e.clientX)
+    })
 
-        this.canvasElement.addEventListener('mousemove', (e) => {
-          // Обрабатываем только если кнопка мыши зажата
-          if (this.isMouseDown) {
-            this.handleMouseMove(e)
-          }
-        })
-
-        this.canvasElement.addEventListener('mouseup', () => {
-          this.isMouseDown = false
-          this.touchTargetX = null
-        })
-
-        this.canvasElement.addEventListener('mouseleave', () => {
-          this.isMouseDown = false
-          this.touchTargetX = null
-        })
+    this.canvasElement.addEventListener('mousemove', (e) => {
+      // Обрабатываем только если кнопка мыши зажата
+      if (this.isMouseDown) {
+        this.handlePointerMove(e.clientX)
       }
-    }, 100)
+    })
+
+    this.canvasElement.addEventListener('mouseup', () => {
+      this.isMouseDown = false
+      this.touchTargetX = null
+    })
+
+    this.canvasElement.addEventListener('mouseleave', () => {
+      this.isMouseDown = false
+      this.touchTargetX = null
+    })
   }
 
-  private handleTouchMove(e: TouchEvent): void {
-    if (!this.canvasElement || e.touches.length === 0) return
-
-    const touch = e.touches[0]
+  private handlePointerMove(clientX: number): void {
     const rect = this.canvasElement.getBoundingClientRect()
     
-    // Переводим координаты касания в координаты игры
-    const canvasX = touch.clientX - rect.left
-    const scaleX = this.sceneWidth / rect.width
-    
-    // Устанавливаем целевую позицию с учетом центра платформы
-    this.touchTargetX = canvasX * scaleX - this.width / 2
-  }
-
-  private handleMouseMove(e: MouseEvent): void {
-    if (!this.canvasElement) return
-
-    const rect = this.canvasElement.getBoundingClientRect()
-    
-    // Переводим координаты мыши в координаты игры
-    const canvasX = e.clientX - rect.left
+    // Переводим координаты в координаты игры
+    const canvasX = clientX - rect.left
     const scaleX = this.sceneWidth / rect.width
     
     // Устанавливаем целевую позицию с учетом центра платформы
@@ -177,7 +155,6 @@ export class Paddle {
     
     // Обновляем размеры сцены
     this.sceneWidth = newSceneWidth
-    this.sceneHeight = newSceneHeight
     
     // Пересчитываем размеры платформы
     this.width = newSceneWidth * GAME_CONFIG.PADDLE_WIDTH

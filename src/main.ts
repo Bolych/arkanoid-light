@@ -76,7 +76,7 @@ async function init() {
   app.stage.addChild(brickManager.container)
 
   // Создаем платформу
-  paddle = new Paddle(app.screen.width, app.screen.height)
+  paddle = new Paddle(app.screen.width, app.screen.height, app.canvas)
   app.stage.addChild(paddle.graphics)
 
   // Создаем шарик
@@ -235,9 +235,6 @@ function gameLoop() {
     // Callback при потере мяча - заканчиваем игру
     endGame()
   })
-  
-  // Обновляем кирпичи (для fade-эффекта)
-  brickManager.update()
   
   // Проверяем столкновения с кирпичами
   const collision = brickManager.checkCollisions(
