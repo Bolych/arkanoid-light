@@ -21,7 +21,7 @@ export class BrickManager {
     const cols = GAME_CONFIG.BRICK_COLS
     const padding = GAME_CONFIG.BRICK_PADDING
     const offsetX = this.sceneWidth * GAME_CONFIG.BRICK_OFFSET_X
-    const offsetY = this.sceneHeight * GAME_CONFIG.BRICK_OFFSET_TOP
+    const offsetY = GAME_CONFIG.BRICK_OFFSET_TOP // Абсолютное значение в пикселях
     
     // Вычисляем размеры кирпича
     const totalPaddingX = padding * (cols + 1) + offsetX * 2
@@ -36,7 +36,7 @@ export class BrickManager {
         // Выбираем случайный тип кирпича (цвет и очки)
         const brickType = this.getRandomBrickType()
         
-        const brick = new Brick(x, y, brickWidth, brickHeight, brickType.color, brickType.points)
+        const brick = new Brick(x, y, brickWidth, brickHeight, brickType.color, brickType.points, row, col)
         this.bricks.push(brick)
         this.container.addChild(brick.graphics)
       }
@@ -72,18 +72,27 @@ export class BrickManager {
   }
 
   public resize(newSceneWidth: number, newSceneHeight: number): void {
-    // Удаляем старые кирпичи
-    this.bricks.forEach(brick => {
-      this.container.removeChild(brick.graphics)
-    })
-    this.bricks = []
-    
-    // Обновляем размеры
+    // Обновляем размеры сцены
     this.sceneWidth = newSceneWidth
     this.sceneHeight = newSceneHeight
     
-    // Создаем новые кирпичи
-    this.createBricks()
+    // Пересчитываем параметры сетки
+    const rows = GAME_CONFIG.BRICK_ROWS
+    const cols = GAME_CONFIG.BRICK_COLS
+    const padding = GAME_CONFIG.BRICK_PADDING
+    const offsetX = this.sceneWidth * GAME_CONFIG.BRICK_OFFSET_X
+    const offsetY = GAME_CONFIG.BRICK_OFFSET_TOP // Абсолютное значение в пикселях
+    
+    const totalPaddingX = padding * (cols + 1) + offsetX * 2
+    const brickWidth = (this.sceneWidth - totalPaddingX) / cols
+    const brickHeight = this.sceneHeight * GAME_CONFIG.BRICK_HEIGHT
+    
+    // Обновляем позиции и размеры существующих кирпичей
+    this.bricks.forEach(brick => {
+      const x = offsetX + padding + brick.col * (brickWidth + padding)
+      const y = offsetY + padding + brick.row * (brickHeight + padding)
+      brick.updatePosition(x, y, brickWidth, brickHeight)
+    })
   }
 
   public getAllBricks(): Brick[] {

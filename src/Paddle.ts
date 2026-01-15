@@ -15,6 +15,7 @@ export class Paddle {
   // Управление касанием для мобильных устройств
   private touchTargetX: number | null = null
   private canvasElement: HTMLCanvasElement | null = null
+  private isMouseDown: boolean = false
 
   constructor(sceneWidth: number, sceneHeight: number) {
     this.sceneWidth = sceneWidth
@@ -77,16 +78,26 @@ export class Paddle {
           this.touchTargetX = null
         })
 
-        // Обработка мыши (для тестирования на десктопе и реальная поддержка мыши)
-        this.canvasElement.addEventListener('mousemove', (e) => {
+        // Обработка мыши (работает только при зажатой кнопке)
+        this.canvasElement.addEventListener('mousedown', (e) => {
+          this.isMouseDown = true
           this.handleMouseMove(e)
         })
 
-        this.canvasElement.addEventListener('mousedown', (e) => {
-          this.handleMouseMove(e)
+        this.canvasElement.addEventListener('mousemove', (e) => {
+          // Обрабатываем только если кнопка мыши зажата
+          if (this.isMouseDown) {
+            this.handleMouseMove(e)
+          }
+        })
+
+        this.canvasElement.addEventListener('mouseup', () => {
+          this.isMouseDown = false
+          this.touchTargetX = null
         })
 
         this.canvasElement.addEventListener('mouseleave', () => {
+          this.isMouseDown = false
           this.touchTargetX = null
         })
       }

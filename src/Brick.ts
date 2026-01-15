@@ -10,12 +10,16 @@ export class Brick {
   public isDestroyed: boolean = false
   private isFading: boolean = false
   private fadeSpeed: number = 0.05 // Скорость исчезновения (чем выше, тем быстрее)
+  public row: number // Позиция в сетке
+  public col: number // Позиция в сетке
 
-  constructor(x: number, y: number, width: number, height: number, color: number, points: number) {
+  constructor(x: number, y: number, width: number, height: number, color: number, points: number, row: number, col: number) {
     this.width = width
     this.height = height
     this.color = color
     this.points = points
+    this.row = row
+    this.col = col
     
     // Создаем графику кирпича
     this.graphics = new Graphics()
@@ -82,6 +86,19 @@ export class Brick {
       width: this.width,
       height: this.height
     }
+  }
+
+  public updatePosition(x: number, y: number, width: number, height: number): void {
+    // Обновляем размеры
+    this.width = width
+    this.height = height
+    
+    // Обновляем позицию
+    this.graphics.x = x
+    this.graphics.y = y
+    
+    // Перерисовываем с новыми размерами
+    this.draw()
   }
 
   public checkCollision(ballX: number, ballY: number, ballRadius: number): { hit: boolean, side: 'top' | 'bottom' | 'left' | 'right' | null } {

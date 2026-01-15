@@ -85,8 +85,7 @@ async function init() {
 
   // Создаем менеджер очков
   scoreManager = new ScoreManager(app.screen.width, app.screen.height)
-  app.stage.addChild(scoreManager.scoreText)
-  app.stage.addChild(scoreManager.playerNameText)
+  app.stage.addChild(scoreManager.uiContainer)
 
   // Показываем модальное окно ввода имени
   showPlayerInputModal()
