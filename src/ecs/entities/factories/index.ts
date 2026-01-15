@@ -1,0 +1,5 @@
+export { createPaddle } from './createPaddle'
+export { createBall } from './createBall'
+export { createBrick } from './createBrick'
+export { createBricks } from './createBricks'
+export { getDarkerColor, getRandomBrickType } from './utils'
