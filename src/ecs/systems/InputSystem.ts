@@ -1,4 +1,5 @@
 import { World } from '../World'
+import type { System } from '../types'
 import type { Entity } from '../entities/index.js'
 
 interface InputEvent {
@@ -11,7 +12,7 @@ interface InputEvent {
  * Система ввода
  * Собирает события в буфер и обрабатывает их в игровом цикле
  */
-export class InputSystem {
+export class InputSystem implements System {
   private world: World<Entity>
   private canvasElement: HTMLCanvasElement
   private sceneWidth: number

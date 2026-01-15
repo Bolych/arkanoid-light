@@ -1,14 +1,16 @@
 import { World } from '../World'
+import type { System } from '../types'
 import type { Entity } from '../entities/index.js'
 
-export class PaddleMovementSystem {
+export class PaddleMovementSystem implements System {
   private world: World<Entity>
 
   constructor(world: World<Entity>) {
     this.world = world
   }
 
-  public update(): void {
+  public update(deltaTime?: number): void {
+    const timeScale = deltaTime ? deltaTime / 16.6667 : 1
     const paddleQuery = this.world.with('paddle', 'position', 'size', 'keyboardInput', 'sceneBounds')
 
     for (const entity of paddleQuery) {
@@ -21,7 +23,7 @@ export class PaddleMovementSystem {
       // Приоритет у касания/мыши
       if (paddle.touchTargetX !== null) {
         const diff = paddle.touchTargetX - position.x
-        const moveSpeed = paddle.speed * 1.5
+        const moveSpeed = paddle.speed * 1.5 * timeScale
 
         if (Math.abs(diff) > 2) {
           if (diff > 0) {
@@ -35,10 +37,10 @@ export class PaddleMovementSystem {
       } else {
         // Управление клавиатурой
         if (keys['ArrowLeft'] || keys['KeyA']) {
-          position.x -= paddle.speed
+          position.x -= paddle.speed * timeScale
         }
         if (keys['ArrowRight'] || keys['KeyD']) {
-          position.x += paddle.speed
+          position.x += paddle.speed * timeScale
         }
       }
 

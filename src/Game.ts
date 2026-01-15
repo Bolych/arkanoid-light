@@ -1,9 +1,11 @@
 import { Application, Container } from 'pixi.js'
-import { SCENE_CONFIG } from './constants'
 import { LeaderboardManager } from './LeaderboardManager'
 import { UIManager } from './UIManager'
+import { GameInputHandler } from './GameInputHandler'
+import { ResizeHandler } from './ResizeHandler'
 import { world } from './ecs/entities/index.js'
 import type { Entity } from './ecs/entities/index.js'
+import { World } from './ecs/World'
 import { createPaddle, createBall, createBricks, createScore, createGameState } from './ecs/entities/factories'
 import {
   InputSystem,
@@ -20,45 +22,40 @@ import {
 
 /**
  * Главный класс игры Arkanoid
- * Инкапсулирует всю игровую логику, системы, менеджеры и сущности
+ * Координирует ECS world, системы и менеджеры
  */
 export class Game {
   // PixiJS приложение
-  private app: Application
+  public app: Application
+  
+  // ECS мир
+  public world: World<Entity>
 
-  // ECS системы
-  private inputSystem!: InputSystem
-  private paddleMovementSystem!: PaddleMovementSystem
-  private ballMovementSystem!: BallMovementSystem
-  private ballLaunchSystem!: BallLaunchSystem
-  private collisionSystem!: CollisionSystem
-  private renderSystem!: RenderSystem
-  private resizeSystem!: ResizeSystem
-  private scoreSystem!: ScoreSystem
-  private scoreUISystem!: ScoreUISystem
-  private gameStateSystem!: GameStateSystem
-
-  // Менеджеры (не ECS)
+  // Менеджеры и обработчики (не ECS)
   private leaderboardManager!: LeaderboardManager
   private uiManager!: UIManager
+  private gameInputHandler!: GameInputHandler
+  private resizeHandler!: ResizeHandler
   private gameOverOverlay: Container | null = null
 
-  // Сущности
-  private paddleEntity!: Entity
-  private ballEntity!: Entity
-  private brickEntities: Entity[] = []
-  private scoreEntity!: Entity
-  private gameStateEntity!: Entity
+  // Системы для доступа вне ECS loop
+  private gameStateSystem!: GameStateSystem
+  private scoreSystem!: ScoreSystem
+  private resizeSystem!: ResizeSystem
 
   constructor() {
     this.app = new Application()
+    this.world = world // Используем глобальный world (временно)
   }
 
   /**
    * Инициализация игры
    */
   async init(): Promise<void> {
-    const { width, height } = this.getGameSize()
+    // Создаем обработчик размеров окна
+    this.resizeHandler = new ResizeHandler()
+    this.resizeHandler.addListener((width, height) => this.handleResize(width, height))
+    const { width, height } = this.resizeHandler.getGameSize()
 
     await this.app.init({
       width,
@@ -74,52 +71,74 @@ export class Game {
     this.leaderboardManager = new LeaderboardManager()
     this.uiManager = new UIManager(this.app.screen.width, this.app.screen.height, this.leaderboardManager)
 
-    // Создаем сущности
-    this.createEntities()
+    // Настраиваем обработчики событий
+    this.resizeHandler.setupEventListener()
+  }
 
-    // Создаем системы
-    this.createSystems()
+  /**
+   * Запуск игры (после инициализации)
+   */
+  run(): void {
+    // Создаем сущности
+    this.populate()
+
+    // Создаем и регистрируем системы в world
+    this.setupSystems()
+
+    // Создаем обработчик игрового ввода
+    this.gameInputHandler = new GameInputHandler({
+      onLaunchBall: () => this.requestBallLaunch(),
+      onRestartGame: () => this.restartGame(),
+      getGameState: () => this.gameStateSystem.getState()
+    })
+    this.gameInputHandler.setupEventListeners()
 
     // Показываем модальное окно ввода имени
     this.showPlayerInputModal()
 
-    // Настраиваем обработчики событий
-    this.setupEventListeners()
-
     // Запускаем игровой цикл
-    this.app.ticker.add(() => this.gameLoop())
+    this.app.ticker.add((ticker) => this.gameLoop(ticker.deltaMS))
   }
 
   /**
-   * Создает игровые сущности
+   * Создает игровые сущности (аналог populate в эталоне)
    */
-  private createEntities(): void {
+  private populate(): void {
     // Создаем singleton-сущность состояния игры
-    this.gameStateEntity = createGameState(world)
+    createGameState(this.world)
 
     // Создаем сущность счета
-    this.scoreEntity = createScore(world, this.app.screen.width, this.app.screen.height)
-    this.app.stage.addChild(this.scoreEntity.uiElement!.container)
+    const scoreEntity = createScore(this.world, this.app.screen.width, this.app.screen.height)
+    this.app.stage.addChild(scoreEntity.uiElement!.container)
 
-    this.paddleEntity = createPaddle(world, this.app.screen.width, this.app.screen.height)
-    this.app.stage.addChild(this.paddleEntity.visual!.graphics)
+    // Создаем платформу
+    const paddleEntity = createPaddle(this.world, this.app.screen.width, this.app.screen.height)
+    this.app.stage.addChild(paddleEntity.visual!.graphics)
 
-    this.ballEntity = createBall(world, this.app.screen.width, this.app.screen.height)
-    this.app.stage.addChild(this.ballEntity.visual!.graphics)
+    // Создаем мяч
+    const ballEntity = createBall(this.world, this.app.screen.width, this.app.screen.height)
+    this.app.stage.addChild(ballEntity.visual!.graphics)
 
-    this.brickEntities = createBricks(world, this.app.screen.width, this.app.screen.height)
-    this.brickEntities.forEach(brick => this.app.stage.addChild(brick.visual!.graphics))
+    // Создаем кирпичи
+    const bricks = createBricks(this.world, this.app.screen.width, this.app.screen.height)
+    bricks.forEach(brick => this.app.stage.addChild(brick.visual!.graphics))
   }
 
   /**
-   * Создает ECS системы
+   * Создает и регистрирует системы в world (по эталону)
    */
-  private createSystems(): void {
-    this.inputSystem = new InputSystem(world, this.app.canvas, this.app.screen.width)
-    this.paddleMovementSystem = new PaddleMovementSystem(world)
-    this.ballMovementSystem = new BallMovementSystem(world)
-    this.ballLaunchSystem = new BallLaunchSystem(world)
-    this.collisionSystem = new CollisionSystem(world, {
+  private setupSystems(): void {
+    // Системы, которые нужны для внешнего доступа
+    this.scoreSystem = new ScoreSystem(this.world)
+    this.gameStateSystem = new GameStateSystem(this.world)
+    this.resizeSystem = new ResizeSystem(this.world)
+
+    // Регистрируем системы в world (обновляются каждый фрейм)
+    this.world.addSystem(new InputSystem(this.world, this.app.canvas, this.app.screen.width))
+    this.world.addSystem(new PaddleMovementSystem(this.world))
+    this.world.addSystem(new BallLaunchSystem(this.world))
+    this.world.addSystem(new BallMovementSystem(this.world))
+    this.world.addSystem(new CollisionSystem(this.world, {
       onBrickDestroyed: (points: number) => {
         this.scoreSystem.addPoints(points)
       },
@@ -129,164 +148,67 @@ export class Game {
       onAllBricksDestroyed: () => {
         this.endGame()
       }
-    })
-    this.renderSystem = new RenderSystem(world)
-    this.resizeSystem = new ResizeSystem(world)
-    this.scoreSystem = new ScoreSystem(world)
-    this.scoreUISystem = new ScoreUISystem(world)
-    this.gameStateSystem = new GameStateSystem(world)
-  }
-
-  /**
-   * Настраивает обработчики событий
-   */
-  private setupEventListeners(): void {
-    window.addEventListener('keydown', (e) => this.handleKeyDown(e))
-    window.addEventListener('touchstart', (e) => this.handleTouchStart(e))
-    window.addEventListener('click', (e) => this.handleClick(e))
-    window.addEventListener('resize', () => this.handleResize())
+    }))
+    this.world.addSystem(new ScoreUISystem(this.world))
+    this.world.addSystem(new RenderSystem(this.world))
+    
+    // Добавляем системы, которые нужны для внешнего доступа
+    // (они имеют пустой метод update())
+    this.world.addSystem(this.scoreSystem)
+    this.world.addSystem(this.gameStateSystem)
+    this.world.addSystem(this.resizeSystem)
   }
 
   /**
    * Показывает модальное окно для ввода имени игрока
    */
   private showPlayerInputModal(): void {
-    const modal = document.getElementById('player-input-modal')!
-    const input = document.getElementById('player-name') as HTMLInputElement
-    const button = document.getElementById('start-game-btn') as HTMLButtonElement
-
-    modal.classList.add('active')
-    input.value = ''
-    input.focus()
-
-    const startGame = () => {
-      const playerName = input.value.trim()
-      if (playerName.length > 0) {
-        this.gameStateSystem.setPlayerName(playerName)
-        this.scoreSystem.setPlayerName(playerName)
-        this.gameStateSystem.startPlaying()
-        modal.classList.remove('active')
-      }
-    }
-
-    button.onclick = startGame
-    input.onkeypress = (e) => {
-      if (e.key === 'Enter') {
-        startGame()
-      }
-    }
+    this.uiManager.showPlayerInputModal((playerName: string) => {
+      this.onPlayerNameEntered(playerName)
+    })
   }
 
   /**
-   * Обработка нажатия клавиш
+   * Обработчик ввода имени игрока
    */
-  private handleKeyDown(e: KeyboardEvent): void {
-    // Проверяем Space по разным вариантам кода клавиши
-    if (e.code === 'Space' || e.key === ' ') {
-      e.preventDefault()
-
-      if (this.gameStateSystem.getState() === 'PLAYING') {
-        this.requestBallLaunch()
-      } else if (this.gameStateSystem.getState() === 'GAME_OVER') {
-        this.restartGame()
-      }
-    }
-  }
-
-  /**
-   * Обработка касания экрана
-   */
-  private handleTouchStart(e: TouchEvent): void {
-    // Проверяем, что касание не по элементам модального окна
-    const target = e.target as HTMLElement
-    if (target.closest('.modal')) {
-      return
-    }
-
-    this.handleUserAction()
-  }
-
-  /**
-   * Обработка клика мыши
-   */
-  private handleClick(e: MouseEvent): void {
-    // Проверяем, что клик не по элементам модального окна
-    const target = e.target as HTMLElement
-    if (target.closest('.modal')) {
-      return
-    }
-
-    this.handleUserAction()
-  }
-
-  /**
-   * Обработка действия пользователя (клик или тач)
-   */
-  private handleUserAction(): void {
-    if (this.gameStateSystem.getState() === 'PLAYING') {
-      this.requestBallLaunch()
-    } else if (this.gameStateSystem.getState() === 'GAME_OVER') {
-      this.restartGame()
-    }
+  private onPlayerNameEntered(playerName: string): void {
+    this.gameStateSystem.setPlayerName(playerName)
+    this.scoreSystem.setPlayerName(playerName)
+    this.gameStateSystem.startPlaying()
   }
 
   /**
    * Запрашивает запуск мяча через добавление команды
+   * Находит сущность мяча динамически (по эталону)
    */
   private requestBallLaunch(): void {
-    if (!this.ballEntity.launchCommand) {
-      // Используем правильный API Miniplex для добавления компонента
-      world.addComponent(this.ballEntity, 'launchCommand', {})
+    const balls = this.world.with('ball', 'velocity')
+    if (balls.length > 0 && !balls[0].launchCommand) {
+      this.world.addComponent(balls[0], 'launchCommand', {})
     }
   }
 
   /**
    * Обработка изменения размера окна
    */
-  private handleResize(): void {
-    const newSize = this.getGameSize()
-    this.app.renderer.resize(newSize.width, newSize.height)
+  private handleResize(width: number, height: number): void {
+    this.app.renderer.resize(width, height)
 
     // Используем ResizeSystem для обновления всех сущностей
-    this.resizeSystem.resize(newSize.width, newSize.height)
+    this.resizeSystem.resize(width, height)
     
-    // Обновляем системы и менеджеры
-    this.scoreUISystem.resize(newSize.width, newSize.height)
-    this.uiManager.resize(newSize.width, newSize.height)
-    this.inputSystem.resize(newSize.width)
-  }
-
-  /**
-   * Получает оптимальный размер для игры
-   */
-  private getGameSize(): { width: number; height: number } {
-    const isMobile = window.innerWidth < SCENE_CONFIG.MOBILE_BREAKPOINT
-    const isPortrait = window.innerHeight > window.innerWidth
-
-    if (isMobile || isPortrait) {
-      // Мобильная или портретная ориентация - на всю высоту экрана
-      const width = Math.min(window.innerWidth, SCENE_CONFIG.MOBILE.MAX_WIDTH)
-      const height = window.innerHeight // Используем всю высоту экрана
-
-      return { width, height }
-    } else {
-      // Десктоп - классический вертикальный формат Arkanoid с соотношением сторон
-      const maxWidth = SCENE_CONFIG.DESKTOP.MAX_WIDTH
-      const maxHeight = SCENE_CONFIG.DESKTOP.MAX_HEIGHT
-      const screenUsage = SCENE_CONFIG.DESKTOP_SCREEN_USAGE // 95% для десктопа
-      const aspectRatio = maxWidth / maxHeight
-
-      let width = Math.min(window.innerWidth * screenUsage, maxWidth)
-      let height = Math.min(window.innerHeight * screenUsage, maxHeight)
-
-      // Сохраняем соотношение сторон
-      if (width / height > aspectRatio) {
-        width = height * aspectRatio
-      } else {
-        height = width / aspectRatio
+    // Обновляем UI менеджер
+    this.uiManager.resize(width, height)
+    
+    // Находим InputSystem и обновляем его
+    const systems = this.world.getSystems()
+    for (const system of systems) {
+      if (system instanceof InputSystem) {
+        system.resize(width)
       }
-
-      return { width, height }
+      if (system instanceof ScoreUISystem) {
+        system.resize(width, height)
+      }
     }
   }
 
@@ -308,6 +230,7 @@ export class Game {
 
   /**
    * Перезапуск игры
+   * Находит и удаляет сущности динамически (по эталону)
    */
   private restartGame(): void {
     // Удаляем экран окончания игры
@@ -319,22 +242,24 @@ export class Game {
     // Сбрасываем счет
     this.scoreSystem.reset()
 
-    // Удаляем старые кирпичи
-    this.brickEntities.forEach(brick => {
-      if (brick.visual) {
-        this.app.stage.removeChild(brick.visual.graphics)
-      }
-      world.remove(brick)
+    // Удаляем все кирпичи (находим динамически)
+    const bricks = this.world.with('brick', 'visual')
+    bricks.forEach((brick: Entity) => {
+      this.app.stage.removeChild(brick.visual!.graphics)
+      this.world.remove(brick)
     })
 
     // Создаем новые кирпичи
-    this.brickEntities = createBricks(world, this.app.screen.width, this.app.screen.height)
-    this.brickEntities.forEach(brick => this.app.stage.addChild(brick.visual!.graphics))
+    const newBricks = createBricks(this.world, this.app.screen.width, this.app.screen.height)
+    newBricks.forEach((brick: Entity) => this.app.stage.addChild(brick.visual!.graphics))
 
-    // Сбрасываем мяч
-    this.ballEntity.ball!.isLaunched = false
-    this.ballEntity.velocity!.x = 0
-    this.ballEntity.velocity!.y = 0
+    // Сбрасываем мяч (находим динамически)
+    const balls = this.world.with('ball', 'velocity')
+    if (balls.length > 0) {
+      balls[0].ball!.isLaunched = false
+      balls[0].velocity!.x = 0
+      balls[0].velocity!.y = 0
+    }
 
     // Начинаем новую игру
     this.gameStateSystem.startNewGame()
@@ -342,23 +267,15 @@ export class Game {
   }
 
   /**
-   * Игровой цикл
+   * Игровой цикл (по эталону - одна строка!)
    */
-  private gameLoop(): void {
-    // InputSystem обрабатывается всегда, чтобы очищать буфер событий
-    this.inputSystem.update()
-
-    // Остальные системы обновляются только если игра идет
+  private gameLoop(deltaTime: number): void {
+    // Проверяем состояние
     if (this.gameStateSystem.getState() !== 'PLAYING') {
       return
     }
 
-    // Обновляем игровые системы ECS
-    this.paddleMovementSystem.update()
-    this.ballLaunchSystem.update()
-    this.ballMovementSystem.update()
-    this.collisionSystem.update()
-    this.scoreUISystem.update()
-    this.renderSystem.update()
+    // Обновляем все системы одной командой (как в эталоне)
+    this.world.update(deltaTime)
   }
 }

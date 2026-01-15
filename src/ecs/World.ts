@@ -1,9 +1,15 @@
+import type { System } from './types'
+
+// Реэкспортируем System для удобства
+export type { System }
+
 /**
  * Простая и эффективная реализация ECS World
- * Управляет сущностями и предоставляет запросы по компонентам
+ * Управляет сущностями, системами и предоставляет запросы по компонентам
  */
 export class World<T extends Record<string, any>> {
   private entities: T[] = []
+  private systems: System[] = []
   
   /**
    * Создает новую сущность с указанными компонентами
@@ -78,5 +84,42 @@ export class World<T extends Record<string, any>> {
    */
   clear(): void {
     this.entities = []
+  }
+
+  /**
+   * Добавляет систему в мир
+   * @param system - Система для добавления
+   */
+  addSystem(system: System): void {
+    this.systems.push(system)
+  }
+
+  /**
+   * Удаляет систему из мира
+   * @param system - Система для удаления
+   */
+  removeSystem(system: System): void {
+    const index = this.systems.indexOf(system)
+    if (index > -1) {
+      this.systems.splice(index, 1)
+    }
+  }
+
+  /**
+   * Обновляет все системы
+   * @param deltaTime - Время с прошлого кадра (опционально)
+   */
+  update(deltaTime?: number): void {
+    for (const system of this.systems) {
+      system.update(deltaTime)
+    }
+  }
+
+  /**
+   * Возвращает все системы
+   * @returns Массив систем
+   */
+  getSystems(): System[] {
+    return this.systems
   }
 }

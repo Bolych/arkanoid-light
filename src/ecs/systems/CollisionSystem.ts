@@ -1,8 +1,9 @@
 import { World } from '../World'
+import type { System } from '../types'
 import type { Entity } from '../entities/index.js'
 import { GAME_CONFIG } from '../../constants'
 
-export class CollisionSystem {
+export class CollisionSystem implements System {
   private world: World<Entity>
   private onBrickDestroyed?: (points: number) => void
   private onBallLost?: () => void

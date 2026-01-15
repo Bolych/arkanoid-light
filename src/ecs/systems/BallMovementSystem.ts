@@ -1,14 +1,16 @@
 import { World } from '../World'
+import type { System } from '../types'
 import type { Entity } from '../entities/index.js'
 
-export class BallMovementSystem {
+export class BallMovementSystem implements System {
   private world: World<Entity>
 
   constructor(world: World<Entity>) {
     this.world = world
   }
 
-  public update(): void {
+  public update(deltaTime?: number): void {
+    const timeScale = deltaTime ? deltaTime / 16.6667 : 1
     const ballQuery = this.world.with('ball', 'position', 'velocity', 'radius', 'sceneBounds')
     const paddleQuery = this.world.with('paddle', 'position', 'size')
 
@@ -31,8 +33,8 @@ export class BallMovementSystem {
       }
 
       // Обновляем позицию
-      pos.x += vel.x
-      pos.y += vel.y
+      pos.x += vel.x * timeScale
+      pos.y += vel.y * timeScale
 
       // Отскок от стен
       if (pos.x - radius <= 0) {

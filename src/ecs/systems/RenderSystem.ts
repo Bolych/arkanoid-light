@@ -1,7 +1,8 @@
 import { World } from '../World'
+import type { System } from '../types'
 import type { Entity } from '../entities/index.js'
 
-export class RenderSystem {
+export class RenderSystem implements System {
   private world: World<Entity>
 
   constructor(world: World<Entity>) {

@@ -112,6 +112,55 @@ export class UIManager {
     return overlay
   }
 
+  /**
+   * Показывает модальное окно для ввода имени игрока
+   * @param onPlayerNameEntered - Callback, вызываемый при вводе имени
+   */
+  public showPlayerInputModal(onPlayerNameEntered: (playerName: string) => void): void {
+    const modal = document.getElementById('player-input-modal')
+    const input = document.getElementById('player-name') as HTMLInputElement | null
+    const button = document.getElementById('start-game-btn') as HTMLButtonElement | null
+
+    if (!modal || !input || !button) {
+      console.error('Player input modal elements not found')
+      return
+    }
+
+    modal.classList.add('active')
+    input.value = ''
+    input.focus()
+
+    const startGame = () => {
+      const playerName = input.value.trim()
+      if (playerName.length > 0) {
+        modal.classList.remove('active')
+        onPlayerNameEntered(playerName)
+      }
+    }
+
+    // Очищаем старые обработчики
+    button.onclick = null
+    input.onkeypress = null
+
+    // Устанавливаем новые обработчики
+    button.onclick = startGame
+    input.onkeypress = (e) => {
+      if (e.key === 'Enter') {
+        startGame()
+      }
+    }
+  }
+
+  /**
+   * Скрывает модальное окно ввода имени
+   */
+  public hidePlayerInputModal(): void {
+    const modal = document.getElementById('player-input-modal')
+    if (modal) {
+      modal.classList.remove('active')
+    }
+  }
+
   public resize(newSceneWidth: number, newSceneHeight: number): void {
     this.sceneWidth = newSceneWidth
     this.sceneHeight = newSceneHeight

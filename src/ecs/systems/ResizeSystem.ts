@@ -1,13 +1,22 @@
 import { World } from '../World'
+import type { System } from '../types'
 import type { Entity } from '../entities/index.js'
 import { GAME_CONFIG } from '../../constants'
 import { getDarkerColor } from '../entities/factories/utils'
 
-export class ResizeSystem {
+export class ResizeSystem implements System {
   private world: World<Entity>
 
   constructor(world: World<Entity>) {
     this.world = world
+  }
+
+  /**
+   * Заглушка для интерфейса System
+   * ResizeSystem не обновляется каждый кадр, а вызывается по событию
+   */
+  public update(): void {
+    // ResizeSystem обновляется только при вызове resize()
   }
 
   /**

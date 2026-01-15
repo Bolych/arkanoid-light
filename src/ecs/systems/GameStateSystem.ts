@@ -1,10 +1,11 @@
 import { World } from '../World'
+import type { System } from '../types'
 import type { Entity, GameStateType } from '../entities/index.js'
 
 /**
  * Система управления состоянием игры
  */
-export class GameStateSystem {
+export class GameStateSystem implements System {
   private world: World<Entity>
 
   constructor(world: World<Entity>) {
@@ -90,5 +91,13 @@ export class GameStateSystem {
    */
   public isPlaying(): boolean {
     return this.getState() === 'PLAYING'
+  }
+
+  /**
+   * Заглушка для интерфейса System
+   * GameStateSystem управляется через методы setState, startPlaying и т.д.
+   */
+  public update(): void {
+    // GameStateSystem не требует обновления каждый кадр
   }
 }

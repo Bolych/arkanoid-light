@@ -1,4 +1,5 @@
 import { World } from '../World'
+import type { System } from '../types'
 import type { Entity } from '../entities/index.js'
 import { Text, Graphics } from 'pixi.js'
 
@@ -6,7 +7,7 @@ import { Text, Graphics } from 'pixi.js'
  * Система визуализации счета
  * Обновляет UI элементы на основе компонента Score
  */
-export class ScoreUISystem {
+export class ScoreUISystem implements System {
   private world: World<Entity>
 
   constructor(world: World<Entity>) {

@@ -1,4 +1,5 @@
 import { World } from '../World'
+import type { System } from '../types'
 import type { Entity } from '../entities/index.js'
 import { GAME_CONFIG } from '../../constants'
 
@@ -6,7 +7,7 @@ import { GAME_CONFIG } from '../../constants'
  * Система запуска мяча
  * Обрабатывает компонент-команду launchCommand
  */
-export class BallLaunchSystem {
+export class BallLaunchSystem implements System {
   private world: World<Entity>
 
   constructor(world: World<Entity>) {
