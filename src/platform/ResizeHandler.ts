@@ -1,4 +1,4 @@
-import { SCENE_CONFIG } from './constants'
+import { SCENE_CONFIG } from '../constants'
 
 /**
  * Обработчик изменения размера окна

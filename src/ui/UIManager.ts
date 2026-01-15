@@ -1,5 +1,5 @@
 import { Container, Text, TextStyle, Graphics } from 'pixi.js'
-import { LeaderboardManager } from './LeaderboardManager'
+import { LeaderboardManager } from '../LeaderboardManager'
 
 export class UIManager {
   private container: Container

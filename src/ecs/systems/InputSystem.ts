@@ -29,22 +29,19 @@ export class InputSystem implements System {
    * Настраивает обработчики событий (только сбор в буфер)
    */
   private setupEventListeners(): void {
-    // Клавиатура
+
     window.addEventListener('keydown', (e) => {
-      // Игнорируем Space - он обрабатывается в Game.ts как игровая команда
       if (e.code !== 'Space' && e.key !== ' ') {
         this.inputBuffer.push({ type: 'keydown', key: e.code })
       }
     })
 
     window.addEventListener('keyup', (e) => {
-      // Игнорируем Space - он обрабатывается в Game.ts как игровая команда
       if (e.code !== 'Space' && e.key !== ' ') {
         this.inputBuffer.push({ type: 'keyup', key: e.code })
       }
     })
 
-    // Тачскрин
     this.canvasElement.addEventListener('touchstart', (e) => {
       e.preventDefault()
       const touch = e.touches[0]
@@ -62,7 +59,6 @@ export class InputSystem implements System {
       this.inputBuffer.push({ type: 'pointerup' })
     })
 
-    // Мышь
     this.canvasElement.addEventListener('mousedown', (e) => {
       this.inputBuffer.push({ type: 'pointerdown', clientX: e.clientX })
       this.inputBuffer.push({ type: 'pointermove', clientX: e.clientX })
@@ -94,7 +90,6 @@ export class InputSystem implements System {
       }
     }
 
-    // Очищаем буфер после обработки
     this.inputBuffer = []
   }
 
@@ -153,9 +148,6 @@ export class InputSystem implements System {
     return canvasX * scaleX - paddleWidth / 2
   }
 
-  /**
-   * Обновляет ширину сцены при ресайзе
-   */
   public resize(newSceneWidth: number): void {
     this.sceneWidth = newSceneWidth
   }

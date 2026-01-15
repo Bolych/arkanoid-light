@@ -10,7 +10,6 @@ export class RenderSystem implements System {
   }
 
   public update(): void {
-    // Обновляем позиции всех визуальных объектов
     const visualQuery = this.world.with('visual', 'position')
 
     for (const entity of visualQuery) {

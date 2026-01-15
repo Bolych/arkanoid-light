@@ -2,8 +2,11 @@
  * Обработчик высокоуровневого пользовательского ввода для игровых команд
  * Отвечает за обработку команд запуска мяча, рестарта и т.д.
  */
+import type { World } from '../ecs/World'
+import type { Entity } from '../ecs/entities/index.js'
+
 export class GameInputHandler {
-  private onLaunchBall?: () => void
+  private world: World<Entity>
   private onRestartGame?: () => void
   private getGameState?: () => string
 
@@ -12,11 +15,11 @@ export class GameInputHandler {
    * @param callbacks - Объект с callback-функциями для игровых действий
    */
   constructor(callbacks: {
-    onLaunchBall?: () => void
+    world: World<Entity>
     onRestartGame?: () => void
     getGameState?: () => string
   }) {
-    this.onLaunchBall = callbacks.onLaunchBall
+    this.world = callbacks.world
     this.onRestartGame = callbacks.onRestartGame
     this.getGameState = callbacks.getGameState
   }
@@ -39,22 +42,14 @@ export class GameInputHandler {
     window.removeEventListener('click', (e) => this.handleClick(e))
   }
 
-  /**
-   * Обработка нажатия клавиш
-   */
   private handleKeyDown(e: KeyboardEvent): void {
-    // Проверяем Space по разным вариантам кода клавиши
     if (e.code === 'Space' || e.key === ' ') {
       e.preventDefault()
       this.handleGameCommand()
     }
   }
 
-  /**
-   * Обработка касания экрана
-   */
   private handleTouchStart(e: TouchEvent): void {
-    // Проверяем, что касание не по элементам модального окна
     const target = e.target as HTMLElement
     if (target.closest('.modal')) {
       return
@@ -63,11 +58,8 @@ export class GameInputHandler {
     this.handleGameCommand()
   }
 
-  /**
-   * Обработка клика мыши
-   */
+
   private handleClick(e: MouseEvent): void {
-    // Проверяем, что клик не по элементам модального окна
     const target = e.target as HTMLElement
     if (target.closest('.modal')) {
       return
@@ -76,18 +68,22 @@ export class GameInputHandler {
     this.handleGameCommand()
   }
 
-  /**
-   * Обработка игровой команды в зависимости от состояния
-   */
   private handleGameCommand(): void {
     if (!this.getGameState) return
 
     const state = this.getGameState()
 
-    if (state === 'PLAYING' && this.onLaunchBall) {
-      this.onLaunchBall()
+    if (state === 'PLAYING') {
+      this.requestBallLaunch()
     } else if (state === 'GAME_OVER' && this.onRestartGame) {
       this.onRestartGame()
+    }
+  }
+
+  private requestBallLaunch(): void {
+    const balls = this.world.with('ball', 'velocity')
+    if (balls.length > 0 && !balls[0].launchCommand) {
+      this.world.addComponent(balls[0], 'launchCommand', {})
     }
   }
 }
