@@ -1,64 +1,30 @@
-import { World } from 'miniplex'
-import type { Graphics } from 'pixi.js'
+import { World } from '../World'
 
-// Переопределяем типы компонентов локально
-export interface Position {
-  x: number
-  y: number
-}
-
-export interface Velocity {
-  x: number
-  y: number
-}
-
-export interface Size {
-  width: number
-  height: number
-}
-
-export interface Radius {
-  value: number
-}
-
-export interface Visual {
-  graphics: Graphics
-}
-
-export interface Paddle {
-  speed: number
-  touchTargetX: number | null
-  isMouseDown: boolean
-}
-
-export interface Ball {
-  isLaunched: boolean
-}
-
-export interface Brick {
-  points: number
-  color: number
-  isDestroyed: boolean
-  row: number
-  col: number
-}
-
-export interface KeyboardInput {
-  keys: { [key: string]: boolean }
-}
-
-export interface SceneBounds {
-  width: number
-  height: number
-}
-
-export type CollisionTag = 'paddle' | 'ball' | 'brick' | 'wall'
-
-export interface Collision {
-  tags: CollisionTag[]
-}
-
-export interface LaunchCommand {}
+// Импортируем все компоненты из централизованной папки
+export type {
+  // Базовые
+  Position,
+  Velocity,
+  Size,
+  Radius,
+  // Игровые
+  Paddle,
+  Ball,
+  Brick,
+  KeyboardInput,
+  SceneBounds,
+  Collision,
+  CollisionTag,
+  // Визуальные
+  Visual,
+  UIElement,
+  // Состояние
+  GameState,
+  GameStateType,
+  Score,
+  // Команды
+  LaunchCommand
+} from '../components/index.js'
 
 // Определяем тип сущности
 export type Entity = {
@@ -74,6 +40,8 @@ export type Entity = {
   sceneBounds?: SceneBounds
   collision?: Collision
   launchCommand?: LaunchCommand
+  score?: Score
+  uiElement?: UIElement
 }
 
 // Создаем мир Miniplex

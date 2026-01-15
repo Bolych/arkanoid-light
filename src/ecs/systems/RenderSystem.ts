@@ -1,4 +1,4 @@
-import { World } from 'miniplex'
+import { World } from '../World'
 import type { Entity } from '../entities/index.js'
 
 export class RenderSystem {

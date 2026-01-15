@@ -1,4 +1,4 @@
-import { World } from 'miniplex'
+import { World } from '../../World'
 import type { Entity } from '../index.js'
 import { GAME_CONFIG } from '../../../constants'
 import { createBrick } from './createBrick'

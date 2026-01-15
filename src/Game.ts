@@ -1,12 +1,10 @@
 import { Application, Container } from 'pixi.js'
 import { SCENE_CONFIG } from './constants'
-import { ScoreManager } from './ScoreManager'
-import { GameStateManager } from './GameStateManager'
 import { LeaderboardManager } from './LeaderboardManager'
 import { UIManager } from './UIManager'
 import { world } from './ecs/entities/index.js'
 import type { Entity } from './ecs/entities/index.js'
-import { createPaddle, createBall, createBricks } from './ecs/entities/factories'
+import { createPaddle, createBall, createBricks, createScore, createGameState } from './ecs/entities/factories'
 import {
   InputSystem,
   PaddleMovementSystem,
@@ -14,7 +12,10 @@ import {
   BallLaunchSystem,
   CollisionSystem,
   RenderSystem,
-  ResizeSystem
+  ResizeSystem,
+  ScoreSystem,
+  ScoreUISystem,
+  GameStateSystem
 } from './ecs/systems'
 
 /**
@@ -33,10 +34,11 @@ export class Game {
   private collisionSystem!: CollisionSystem
   private renderSystem!: RenderSystem
   private resizeSystem!: ResizeSystem
+  private scoreSystem!: ScoreSystem
+  private scoreUISystem!: ScoreUISystem
+  private gameStateSystem!: GameStateSystem
 
   // Менеджеры (не ECS)
-  private scoreManager!: ScoreManager
-  private gameStateManager!: GameStateManager
   private leaderboardManager!: LeaderboardManager
   private uiManager!: UIManager
   private gameOverOverlay: Container | null = null
@@ -45,6 +47,8 @@ export class Game {
   private paddleEntity!: Entity
   private ballEntity!: Entity
   private brickEntities: Entity[] = []
+  private scoreEntity!: Entity
+  private gameStateEntity!: Entity
 
   constructor() {
     this.app = new Application()
@@ -67,13 +71,8 @@ export class Game {
     appDiv.appendChild(this.app.canvas)
 
     // Создаем менеджеры
-    this.gameStateManager = new GameStateManager()
     this.leaderboardManager = new LeaderboardManager()
     this.uiManager = new UIManager(this.app.screen.width, this.app.screen.height, this.leaderboardManager)
-
-    // Создаем менеджер очков
-    this.scoreManager = new ScoreManager(this.app.screen.width, this.app.screen.height)
-    this.app.stage.addChild(this.scoreManager.uiContainer)
 
     // Создаем сущности
     this.createEntities()
@@ -95,6 +94,13 @@ export class Game {
    * Создает игровые сущности
    */
   private createEntities(): void {
+    // Создаем singleton-сущность состояния игры
+    this.gameStateEntity = createGameState(world)
+
+    // Создаем сущность счета
+    this.scoreEntity = createScore(world, this.app.screen.width, this.app.screen.height)
+    this.app.stage.addChild(this.scoreEntity.uiElement!.container)
+
     this.paddleEntity = createPaddle(world, this.app.screen.width, this.app.screen.height)
     this.app.stage.addChild(this.paddleEntity.visual!.graphics)
 
@@ -115,7 +121,7 @@ export class Game {
     this.ballLaunchSystem = new BallLaunchSystem(world)
     this.collisionSystem = new CollisionSystem(world, {
       onBrickDestroyed: (points: number) => {
-        this.scoreManager.addPoints(points)
+        this.scoreSystem.addPoints(points)
       },
       onBallLost: () => {
         this.endGame()
@@ -126,6 +132,9 @@ export class Game {
     })
     this.renderSystem = new RenderSystem(world)
     this.resizeSystem = new ResizeSystem(world)
+    this.scoreSystem = new ScoreSystem(world)
+    this.scoreUISystem = new ScoreUISystem(world)
+    this.gameStateSystem = new GameStateSystem(world)
   }
 
   /**
@@ -153,9 +162,9 @@ export class Game {
     const startGame = () => {
       const playerName = input.value.trim()
       if (playerName.length > 0) {
-        this.gameStateManager.setPlayerName(playerName)
-        this.scoreManager.setPlayerName(playerName)
-        this.gameStateManager.startPlaying()
+        this.gameStateSystem.setPlayerName(playerName)
+        this.scoreSystem.setPlayerName(playerName)
+        this.gameStateSystem.startPlaying()
         modal.classList.remove('active')
       }
     }
@@ -176,9 +185,9 @@ export class Game {
     if (e.code === 'Space' || e.key === ' ') {
       e.preventDefault()
 
-      if (this.gameStateManager.getState() === 'PLAYING') {
+      if (this.gameStateSystem.getState() === 'PLAYING') {
         this.requestBallLaunch()
-      } else if (this.gameStateManager.getState() === 'GAME_OVER') {
+      } else if (this.gameStateSystem.getState() === 'GAME_OVER') {
         this.restartGame()
       }
     }
@@ -214,9 +223,9 @@ export class Game {
    * Обработка действия пользователя (клик или тач)
    */
   private handleUserAction(): void {
-    if (this.gameStateManager.getState() === 'PLAYING') {
+    if (this.gameStateSystem.getState() === 'PLAYING') {
       this.requestBallLaunch()
-    } else if (this.gameStateManager.getState() === 'GAME_OVER') {
+    } else if (this.gameStateSystem.getState() === 'GAME_OVER') {
       this.restartGame()
     }
   }
@@ -240,9 +249,9 @@ export class Game {
 
     // Используем ResizeSystem для обновления всех сущностей
     this.resizeSystem.resize(newSize.width, newSize.height)
-
-    // Обновляем менеджеры
-    this.scoreManager.resize(newSize.width, newSize.height)
+    
+    // Обновляем системы и менеджеры
+    this.scoreUISystem.resize(newSize.width, newSize.height)
     this.uiManager.resize(newSize.width, newSize.height)
     this.inputSystem.resize(newSize.width)
   }
@@ -285,11 +294,11 @@ export class Game {
    * Окончание игры
    */
   private endGame(): void {
-    this.gameStateManager.endGame()
-
+    this.gameStateSystem.endGame()
+    
     // Сохраняем результат
-    const playerName = this.gameStateManager.getPlayerName()
-    const finalScore = this.scoreManager.getScore()
+    const playerName = this.gameStateSystem.getPlayerName()
+    const finalScore = this.scoreSystem.getScore()
     this.leaderboardManager.saveScore(playerName, finalScore)
 
     // Показываем экран окончания игры
@@ -308,7 +317,7 @@ export class Game {
     }
 
     // Сбрасываем счет
-    this.scoreManager.reset()
+    this.scoreSystem.reset()
 
     // Удаляем старые кирпичи
     this.brickEntities.forEach(brick => {
@@ -328,7 +337,7 @@ export class Game {
     this.ballEntity.velocity!.y = 0
 
     // Начинаем новую игру
-    this.gameStateManager.startNewGame()
+    this.gameStateSystem.startNewGame()
     this.showPlayerInputModal()
   }
 
@@ -340,7 +349,7 @@ export class Game {
     this.inputSystem.update()
 
     // Остальные системы обновляются только если игра идет
-    if (this.gameStateManager.getState() !== 'PLAYING') {
+    if (this.gameStateSystem.getState() !== 'PLAYING') {
       return
     }
 
@@ -349,6 +358,7 @@ export class Game {
     this.ballLaunchSystem.update()
     this.ballMovementSystem.update()
     this.collisionSystem.update()
+    this.scoreUISystem.update()
     this.renderSystem.update()
   }
 }

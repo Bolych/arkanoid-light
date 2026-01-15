@@ -1,5 +1,5 @@
 import { Graphics } from 'pixi.js'
-import { World } from 'miniplex'
+import { World } from '../../World'
 import type { Entity } from '../index.js'
 import { getDarkerColor } from './utils'
 

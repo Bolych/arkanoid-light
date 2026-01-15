@@ -1,4 +1,4 @@
-import { World } from 'miniplex'
+import { World } from '../World'
 import type { Entity } from '../entities/index.js'
 import { GAME_CONFIG } from '../../constants'
 
@@ -119,7 +119,7 @@ export class CollisionSystem {
           }
 
           // Проверяем, все ли кирпичи разбиты
-          const activeBricks = this.world.with('brick').entities.filter(b => !b.brick!.isDestroyed)
+          const activeBricks = this.world.with('brick').filter(b => !b.brick!.isDestroyed)
           if (activeBricks.length === 0 && this.onAllBricksDestroyed) {
             this.onAllBricksDestroyed()
           }
