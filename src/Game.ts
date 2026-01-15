@@ -172,7 +172,8 @@ export class Game {
    * Обработка нажатия клавиш
    */
   private handleKeyDown(e: KeyboardEvent): void {
-    if (e.code === 'Space') {
+    // Проверяем Space по разным вариантам кода клавиши
+    if (e.code === 'Space' || e.key === ' ') {
       e.preventDefault()
 
       if (this.gameStateManager.getState() === 'PLAYING') {
@@ -225,7 +226,8 @@ export class Game {
    */
   private requestBallLaunch(): void {
     if (!this.ballEntity.launchCommand) {
-      this.ballEntity.launchCommand = {}
+      // Используем правильный API Miniplex для добавления компонента
+      world.addComponent(this.ballEntity, 'launchCommand', {})
     }
   }
 
@@ -334,12 +336,15 @@ export class Game {
    * Игровой цикл
    */
   private gameLoop(): void {
-    // Обновляем только если игра идет
+    // InputSystem обрабатывается всегда, чтобы очищать буфер событий
+    this.inputSystem.update()
+
+    // Остальные системы обновляются только если игра идет
     if (this.gameStateManager.getState() !== 'PLAYING') {
       return
     }
 
-    // Обновляем системы ECS
+    // Обновляем игровые системы ECS
     this.paddleMovementSystem.update()
     this.ballLaunchSystem.update()
     this.ballMovementSystem.update()

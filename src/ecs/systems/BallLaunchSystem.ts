@@ -26,8 +26,8 @@ export class BallLaunchSystem {
         this.launchBall(ball)
       }
 
-      // Удаляем команду после выполнения
-      delete ball.launchCommand
+      // Удаляем команду после выполнения используя правильный API
+      this.world.removeComponent(ball, 'launchCommand')
     }
   }
 
