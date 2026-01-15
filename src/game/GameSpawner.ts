@@ -8,9 +8,6 @@ type GameSpawnerDeps = {
   app: Application
 }
 
-/**
- * Создает игровые сущности и добавляет визуальные объекты на сцену.
- */
 export class GameSpawner {
   private world: World<Entity>
   private app: Application

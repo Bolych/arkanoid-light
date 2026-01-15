@@ -1,5 +1,4 @@
-import { World } from '../World'
-import type { System } from '../types'
+import { World, type System } from '../World'
 import type { Entity } from '../entities/index.js'
 import { GAME_CONFIG } from '../../constants'
 
@@ -45,17 +44,15 @@ export class CollisionSystem implements System {
         const paddleSize = paddle.size!
 
         if (
-          ballVel.y > 0 && // Мяч движется вниз
+          ballVel.y > 0 &&
           ballPos.x + radius > paddlePos.x &&
           ballPos.x - radius < paddlePos.x + paddleSize.width &&
           ballPos.y + radius >= paddlePos.y &&
           ballPos.y - radius < paddlePos.y + paddleSize.height
         ) {
-          // Столкновение с платформой
           ballPos.y = paddlePos.y - radius
           ballVel.y = -Math.abs(ballVel.y)
 
-          // Эффект отскока в зависимости от места удара
           const paddleCenter = paddlePos.x + paddleSize.width / 2
           const hitPosition = (ballPos.x - paddleCenter) / (paddleSize.width / 2)
           ballVel.x = hitPosition * GAME_CONFIG.BALL_SPEED
@@ -81,7 +78,6 @@ export class CollisionSystem implements System {
         const brickPos = brick.position!
         const brickSize = brick.size!
 
-        // Проверка пересечения круга и прямоугольника
         const closestX = Math.max(brickPos.x, Math.min(ballPos.x, brickPos.x + brickSize.width))
         const closestY = Math.max(brickPos.y, Math.min(ballPos.y, brickPos.y + brickSize.height))
 
@@ -90,13 +86,11 @@ export class CollisionSystem implements System {
         const distanceSquared = distanceX * distanceX + distanceY * distanceY
 
         if (distanceSquared < radius * radius) {
-          // Столкновение обнаружено
           brick.brick!.isDestroyed = true
           if (brick.visual) {
             brick.visual.graphics.visible = false
           }
 
-          // Определяем сторону столкновения
           const centerX = brickPos.x + brickSize.width / 2
           const centerY = brickPos.y + brickSize.height / 2
           const dx = ballPos.x - centerX
@@ -105,27 +99,23 @@ export class CollisionSystem implements System {
           const heightRatio = Math.abs(dy) / brickSize.height
 
           if (widthRatio > heightRatio) {
-            // Столкновение слева или справа
             ballVel.x = -ballVel.x
             ballPos.x += ballVel.x * 2
           } else {
-            // Столкновение сверху или снизу
             ballVel.y = -ballVel.y
             ballPos.y += ballVel.y * 2
           }
 
-          // Callback при разрушении кирпича
           if (this.onBrickDestroyed) {
             this.onBrickDestroyed(brick.brick!.points)
           }
 
-          // Проверяем, все ли кирпичи разбиты
           const activeBricks = this.world.with('brick').filter(b => !b.brick!.isDestroyed)
           if (activeBricks.length === 0 && this.onAllBricksDestroyed) {
             this.onAllBricksDestroyed()
           }
 
-          break // Только один кирпич за раз
+          break
         }
       }
     }
@@ -142,7 +132,6 @@ export class CollisionSystem implements System {
       const bounds = ball.sceneBounds!
 
       if (pos.y - radius > bounds.height) {
-        // Мяч улетел за пределы
         if (this.onBallLost) {
           this.onBallLost()
         }

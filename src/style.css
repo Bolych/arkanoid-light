@@ -28,17 +28,14 @@ body {
   overflow: hidden;
   width: 100vw;
   height: 100vh;
-  /* Для iOS Safari - использовать всю высоту экрана */
   height: 100dvh;
   display: flex;
   justify-content: center;
   align-items: center;
   background-color: #1a1a1a;
-  /* Предотвращаем выделение на мобильных устройствах */
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   user-select: none;
-  /* Предотвращаем bouncing эффект на iOS */
   position: fixed;
   top: 0;
   left: 0;
@@ -64,7 +61,6 @@ h1 {
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
 }
 
-/* Модальное окно для ввода имени */
 .modal {
   display: none;
   position: fixed;
@@ -183,10 +179,8 @@ button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
-/* Стили для мобильных устройств */
 @media (max-width: 768px) {
   body {
-    /* Убираем центрирование на мобильных - игра займет весь экран */
     align-items: flex-start;
   }
 
@@ -197,7 +191,6 @@ button:focus-visible {
   }
 
   #app canvas {
-    /* Убираем тень на мобильных - игра во весь экран */
     box-shadow: none;
   }
 }

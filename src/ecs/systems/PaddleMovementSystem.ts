@@ -1,5 +1,4 @@
-import { World } from '../World'
-import type { System } from '../types'
+import { World, type System } from '../World'
 import type { Entity } from '../entities/index.js'
 
 export class PaddleMovementSystem implements System {
@@ -20,7 +19,6 @@ export class PaddleMovementSystem implements System {
       const keys = entity.keyboardInput!.keys
       const bounds = entity.sceneBounds!
 
-      // Приоритет у касания/мыши
       if (paddle.touchTargetX !== null) {
         const diff = paddle.touchTargetX - position.x
         const moveSpeed = paddle.speed * 1.5 * timeScale
@@ -35,7 +33,6 @@ export class PaddleMovementSystem implements System {
           position.x = paddle.touchTargetX
         }
       } else {
-        // Управление клавиатурой
         if (keys['ArrowLeft'] || keys['KeyA']) {
           position.x -= paddle.speed * timeScale
         }
@@ -44,7 +41,6 @@ export class PaddleMovementSystem implements System {
         }
       }
 
-      // Ограничение границами
       if (position.x < 0) {
         position.x = 0
       }

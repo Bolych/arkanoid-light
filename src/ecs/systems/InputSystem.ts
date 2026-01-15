@@ -1,5 +1,4 @@
-import { World } from '../World'
-import type { System } from '../types'
+import { World, type System } from '../World'
 import type { Entity } from '../entities/index.js'
 
 interface InputEvent {
@@ -8,10 +7,6 @@ interface InputEvent {
   clientX?: number
 }
 
-/**
- * Система ввода
- * Собирает события в буфер и обрабатывает их в игровом цикле
- */
 export class InputSystem implements System {
   private world: World<Entity>
   private canvasElement: HTMLCanvasElement
@@ -25,9 +20,6 @@ export class InputSystem implements System {
     this.setupEventListeners()
   }
 
-  /**
-   * Настраивает обработчики событий (только сбор в буфер)
-   */
   private setupEventListeners(): void {
 
     window.addEventListener('keydown', (e) => {
@@ -77,13 +69,9 @@ export class InputSystem implements System {
     })
   }
 
-  /**
-   * Обновление системы - обрабатывает накопленные события
-   */
   public update(): void {
     const paddleQuery = this.world.with('paddle', 'keyboardInput', 'size')
 
-    // Обрабатываем все события из буфера
     for (const event of this.inputBuffer) {
       for (const entity of paddleQuery) {
         this.processEvent(entity, event)
@@ -93,9 +81,6 @@ export class InputSystem implements System {
     this.inputBuffer = []
   }
 
-  /**
-   * Обрабатывает одно событие для сущности
-   */
   private processEvent(entity: Entity, event: InputEvent): void {
     const paddle = entity.paddle!
     const keyboardInput = entity.keyboardInput!
@@ -137,9 +122,6 @@ export class InputSystem implements System {
     }
   }
 
-  /**
-   * Вычисляет целевую X позицию для платформы на основе clientX
-   */
   private calculateTargetX(clientX: number, paddleWidth: number): number {
     const rect = this.canvasElement.getBoundingClientRect()
     const canvasX = clientX - rect.left

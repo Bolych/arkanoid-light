@@ -1,5 +1,4 @@
-import { World } from '../World'
-import type { System } from '../types'
+import { World, type System } from '../World'
 import type { Entity } from '../entities/index.js'
 
 export class BallMovementSystem implements System {
@@ -21,7 +20,6 @@ export class BallMovementSystem implements System {
       const radius = ball.radius!.value
       const bounds = ball.sceneBounds!
 
-      // Если мяч не запущен, он следует за платформой
       if (!ballComp.isLaunched) {
         for (const paddle of paddleQuery) {
           const paddlePos = paddle.position!
@@ -32,11 +30,9 @@ export class BallMovementSystem implements System {
         continue
       }
 
-      // Обновляем позицию
       pos.x += vel.x * timeScale
       pos.y += vel.y * timeScale
 
-      // Отскок от стен
       if (pos.x - radius <= 0) {
         pos.x = radius
         vel.x = Math.abs(vel.x)
@@ -45,7 +41,6 @@ export class BallMovementSystem implements System {
         vel.x = -Math.abs(vel.x)
       }
 
-      // Отскок от верхней стены
       if (pos.y - radius <= 0) {
         pos.y = radius
         vel.y = Math.abs(vel.y)

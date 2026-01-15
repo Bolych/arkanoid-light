@@ -22,22 +22,17 @@ type GameSystemsDeps = {
   onAllBricksDestroyed: () => void
 }
 
-type GameSystemsResult = {
-  scoreSystem: ScoreSystem
-  gameStateSystem: GameStateSystem
-  resizeSystem: ResizeSystem
-}
-
-/**
- * Регистрирует системы и возвращает доступные извне системы.
- */
 export const setupGameSystems = ({
   world,
   app,
   onBrickDestroyed,
   onBallLost,
   onAllBricksDestroyed
-}: GameSystemsDeps): GameSystemsResult => {
+}: GameSystemsDeps): {
+  scoreSystem: ScoreSystem
+  gameStateSystem: GameStateSystem
+  resizeSystem: ResizeSystem
+} => {
   const scoreSystem = new ScoreSystem(world)
   const gameStateSystem = new GameStateSystem(world)
   const resizeSystem = new ResizeSystem(world)

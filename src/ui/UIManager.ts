@@ -17,13 +17,11 @@ export class UIManager {
   public showGameOver(playerName: string, finalScore: number): Container {
     const overlay = new Container()
 
-    // Полупрозрачный фон
     const bg = new Graphics()
     bg.rect(0, 0, this.sceneWidth, this.sceneHeight)
     bg.fill({ color: 0x000000, alpha: 0.8 })
     overlay.addChild(bg)
 
-    // Заголовок
     const titleStyle = new TextStyle({
       fontFamily: 'Arial, sans-serif',
       fontSize: 48,
@@ -41,7 +39,6 @@ export class UIManager {
     title.y = 60
     overlay.addChild(title)
 
-    // Имя игрока и счет
     const scoreStyle = new TextStyle({
       fontFamily: 'Arial, sans-serif',
       fontSize: 28,
@@ -58,7 +55,6 @@ export class UIManager {
     playerScoreText.y = 130
     overlay.addChild(playerScoreText)
 
-    // Топ-5 игроков
     const leaderboardTitle = new Text({
       text: 'ТОП-5 ИГРОКОВ',
       style: new TextStyle({
@@ -74,7 +70,6 @@ export class UIManager {
     leaderboardTitle.y = 200
     overlay.addChild(leaderboardTitle)
 
-    // Список топ-5
     const topScores = this.leaderboardManager.getTopScores()
     const entryStyle = new TextStyle({
       fontFamily: 'Arial, sans-serif',
@@ -94,7 +89,6 @@ export class UIManager {
       overlay.addChild(text)
     })
 
-    // Инструкция для рестарта
     const restartText = new Text({
       text: 'Нажмите ПРОБЕЛ для новой игры',
       style: new TextStyle({
@@ -112,10 +106,6 @@ export class UIManager {
     return overlay
   }
 
-  /**
-   * Показывает модальное окно для ввода имени игрока
-   * @param onPlayerNameEntered - Callback, вызываемый при вводе имени
-   */
   public showPlayerInputModal(onPlayerNameEntered: (playerName: string) => void): void {
     const modal = document.getElementById('player-input-modal')
     const input = document.getElementById('player-name') as HTMLInputElement | null
@@ -138,11 +128,9 @@ export class UIManager {
       }
     }
 
-    // Очищаем старые обработчики
     button.onclick = null
     input.onkeypress = null
 
-    // Устанавливаем новые обработчики
     button.onclick = startGame
     input.onkeypress = (e) => {
       if (e.key === 'Enter') {
@@ -151,9 +139,6 @@ export class UIManager {
     }
   }
 
-  /**
-   * Скрывает модальное окно ввода имени
-   */
   public hidePlayerInputModal(): void {
     const modal = document.getElementById('player-input-modal')
     if (modal) {

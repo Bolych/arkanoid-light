@@ -1,59 +1,46 @@
-// Константы для игровых элементов
 export const GAME_CONFIG = {
-  // Зона кирпичей - верхние 60%
   BRICKS_ZONE_HEIGHT: 0.6,
-  BRICKS_START_Y: 0.05,  // Отступ сверху (5%)
+  BRICKS_START_Y: 0.05,
   
-  // Платформа - в нижней части
-  PADDLE_Y_POSITION: 0.9,  // 90% от высоты
-  PADDLE_WIDTH: 0.15,      // 15% от ширины сцены
-  PADDLE_HEIGHT: 0.02,     // 2% от высоты сцены
-  PADDLE_SPEED: 12,         // Скорость движения платформы (пикселей за кадр)
-  PADDLE_COLOR: 0x4A90E2,  // Синий цвет платформы
+  PADDLE_Y_POSITION: 0.9,
+  PADDLE_WIDTH: 0.15,
+  PADDLE_HEIGHT: 0.02,
+  PADDLE_SPEED: 12,
+  PADDLE_COLOR: 0x4A90E2,
   
-  // Шарик
-  BALL_RADIUS: 8,          // Радиус шарика в пикселях
-  BALL_SPEED: 10,           // Скорость движения шарика
-  BALL_COLOR: 0xFFFFFF,    // Белый цвет шарика
-  BALL_START_Y: 0.7,       // Начальная позиция по Y (70% от высоты)
+  BALL_RADIUS: 8,
+  BALL_SPEED: 10,
+  BALL_COLOR: 0xFFFFFF,
+  BALL_START_Y: 0.7,
   
-  // UI панель
-  UI_PANEL_HEIGHT: 50,     // Высота верхней UI панели в пикселях
+  UI_PANEL_HEIGHT: 50,
   
-  // Кирпичи
-  BRICK_ROWS: 5,           // Количество рядов кирпичей
-  BRICK_COLS: 8,           // Количество столбцов кирпичей
-  BRICK_HEIGHT: 0.03,      // Высота кирпича (3% от высоты сцены)
-  BRICK_PADDING: 5,        // Отступ между кирпичами в пикселях
-  BRICK_OFFSET_TOP: 70,    // Отступ сверху в пикселях (UI панель + отступ)
-  BRICK_OFFSET_X: 0.05,    // Отступ по бокам (5% от ширины)
+  BRICK_ROWS: 5,
+  BRICK_COLS: 8,
+  BRICK_HEIGHT: 0.03,
+  BRICK_PADDING: 5,
+  BRICK_OFFSET_TOP: 70,
+  BRICK_OFFSET_X: 0.05,
   BRICK_TYPES: [
-    { color: 0x0000FF, points: 1 },  // Синий - 1 очко
-    { color: 0xFF0000, points: 2 },  // Красный - 2 очка
-    { color: 0x00FF00, points: 3 },  // Зеленый - 3 очка
+    { color: 0x0000FF, points: 1 },
+    { color: 0xFF0000, points: 2 },
+    { color: 0x00FF00, points: 3 },
   ],
   
-  // Зона игры мяча - между кирпичами и платформой
   PLAY_ZONE_START: 0.65,
   PLAY_ZONE_END: 0.88,
 }
 
-// Размеры игровой сцены
 export const SCENE_CONFIG = {
-  // Мобильные устройства
   MOBILE: {
     MAX_WIDTH: 450,
-    MAX_HEIGHT: 2000, // Увеличено для поддержки высоких экранов
+    MAX_HEIGHT: 2000,
   },
-  // Десктоп
   DESKTOP: {
     MAX_WIDTH: 600,
     MAX_HEIGHT: 800,
   },
-  // Breakpoint для определения мобильного устройства
   MOBILE_BREAKPOINT: 768,
-  // Процент использования экрана для мобильных (100% - во весь экран)
   MOBILE_SCREEN_USAGE: 1.0,
-  // Процент использования экрана для десктопа (95% - с небольшим отступом)
   DESKTOP_SCREEN_USAGE: 0.95,
 }

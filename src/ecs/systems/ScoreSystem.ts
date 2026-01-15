@@ -1,11 +1,6 @@
-import { World } from '../World'
-import type { System } from '../types'
+import { World, type System } from '../World'
 import type { Entity } from '../entities/index.js'
 
-/**
- * Система управления счетом
- * Обрабатывает логику начисления очков
- */
 export class ScoreSystem implements System {
   private world: World<Entity>
 
@@ -13,9 +8,6 @@ export class ScoreSystem implements System {
     this.world = world
   }
 
-  /**
-   * Добавляет очки к счету
-   */
   public addPoints(points: number): void {
     const scoreEntities = this.world.with('score')
 
@@ -24,9 +16,6 @@ export class ScoreSystem implements System {
     }
   }
 
-  /**
-   * Устанавливает имя игрока
-   */
   public setPlayerName(name: string): void {
     const scoreEntities = this.world.with('score')
 
@@ -35,9 +24,6 @@ export class ScoreSystem implements System {
     }
   }
 
-  /**
-   * Получает текущий счет
-   */
   public getScore(): number {
     const scoreEntities = this.world.with('score')
 
@@ -48,9 +34,6 @@ export class ScoreSystem implements System {
     return 0
   }
 
-  /**
-   * Сбрасывает счет
-   */
   public reset(): void {
     const scoreEntities = this.world.with('score')
 
@@ -59,11 +42,6 @@ export class ScoreSystem implements System {
     }
   }
 
-  /**
-   * Заглушка для интерфейса System
-   * ScoreSystem управляется через методы addPoints, setPlayerName и т.д.
-   */
   public update(): void {
-    // ScoreSystem не требует обновления каждый кадр
   }
 }

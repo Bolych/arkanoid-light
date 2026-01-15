@@ -10,9 +10,6 @@ type ResizeApplierDeps = {
   uiManager: UIManager
 }
 
-/**
- * Применяет resize к рендеру, ECS и UI.
- */
 export class ResizeApplier {
   private app: Application
   private world: World<Entity>
@@ -27,13 +24,10 @@ export class ResizeApplier {
   public apply(width: number, height: number): void {
     this.app.renderer.resize(width, height)
 
-    // Используем ResizeSystem для обновления всех сущностей
     this.updateResizeSystem(width, height)
     
-    // Обновляем UI менеджер
     this.uiManager.resize(width, height)
     
-    // Находим InputSystem и обновляем его
     this.updateSystemDeps(width, height)
   }
 

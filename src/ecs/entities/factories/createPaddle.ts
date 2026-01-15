@@ -2,10 +2,6 @@ import { Graphics } from 'pixi.js'
 import { World } from '../../World'
 import type { Entity } from '../index.js'
 import { GAME_CONFIG } from '../../../constants'
-
-/**
- * Создает сущность платформы
- */
 export function createPaddle(
   world: World<Entity>,
   sceneWidth: number,
@@ -16,7 +12,6 @@ export function createPaddle(
   const x = (sceneWidth - width) / 2
   const y = sceneHeight * GAME_CONFIG.PADDLE_Y_POSITION
 
-  // Создаем графику
   const graphics = new Graphics()
   graphics.roundRect(0, 0, width, height, 5)
   graphics.fill(GAME_CONFIG.PADDLE_COLOR)

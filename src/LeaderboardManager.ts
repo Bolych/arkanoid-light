@@ -11,20 +11,16 @@ export class LeaderboardManager {
   public saveScore(playerName: string, score: number): void {
     const scores = this.getScores()
     
-    // Добавляем новый результат
     scores.push({
       name: playerName,
       score: score,
       date: new Date().toLocaleDateString('ru-RU')
     })
 
-    // Сортируем по убыванию очков
     scores.sort((a, b) => b.score - a.score)
 
-    // Оставляем только топ-5
     const topScores = scores.slice(0, this.MAX_ENTRIES)
 
-    // Сохраняем в localStorage
     localStorage.setItem(this.STORAGE_KEY, JSON.stringify(topScores))
   }
 

@@ -1,7 +1,3 @@
-/**
- * Обработчик высокоуровневого пользовательского ввода для игровых команд
- * Отвечает за обработку команд запуска мяча, рестарта и т.д.
- */
 import type { World } from '../ecs/World'
 import type { Entity } from '../ecs/entities/index.js'
 
@@ -10,10 +6,6 @@ export class GameInputHandler {
   private onRestartGame?: () => void
   private getGameState?: () => string
 
-  /**
-   * Конструктор
-   * @param callbacks - Объект с callback-функциями для игровых действий
-   */
   constructor(callbacks: {
     world: World<Entity>
     onRestartGame?: () => void
@@ -24,18 +16,12 @@ export class GameInputHandler {
     this.getGameState = callbacks.getGameState
   }
 
-  /**
-   * Инициализирует обработчики событий
-   */
   public setupEventListeners(): void {
     window.addEventListener('keydown', (e) => this.handleKeyDown(e))
     window.addEventListener('touchstart', (e) => this.handleTouchStart(e))
     window.addEventListener('click', (e) => this.handleClick(e))
   }
 
-  /**
-   * Удаляет обработчики событий (для очистки)
-   */
   public destroy(): void {
     window.removeEventListener('keydown', (e) => this.handleKeyDown(e))
     window.removeEventListener('touchstart', (e) => this.handleTouchStart(e))
@@ -57,7 +43,6 @@ export class GameInputHandler {
 
     this.handleGameCommand()
   }
-
 
   private handleClick(e: MouseEvent): void {
     const target = e.target as HTMLElement

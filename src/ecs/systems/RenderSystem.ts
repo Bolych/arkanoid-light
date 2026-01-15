@@ -1,5 +1,4 @@
-import { World } from '../World'
-import type { System } from '../types'
+import { World, type System } from '../World'
 import type { Entity } from '../entities/index.js'
 
 export class RenderSystem implements System {

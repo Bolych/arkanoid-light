@@ -4,9 +4,6 @@ import { GAME_CONFIG } from '../../../constants'
 import { createBrick } from './createBrick'
 import { getRandomBrickType } from './utils'
 
-/**
- * Создает массив сущностей кирпичей (сетку кирпичей)
- */
 export function createBricks(
   world: World<Entity>,
   sceneWidth: number,

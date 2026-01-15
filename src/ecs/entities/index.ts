@@ -1,13 +1,10 @@
 import { World } from '../World'
 
-// Импортируем все компоненты из централизованной папки
 export type {
-  // Базовые
   Position,
   Velocity,
   Size,
   Radius,
-  // Игровые
   Paddle,
   Ball,
   Brick,
@@ -15,18 +12,14 @@ export type {
   SceneBounds,
   Collision,
   CollisionTag,
-  // Визуальные
   Visual,
   UIElement,
-  // Состояние
   GameState,
   GameStateType,
   Score,
-  // Команды
   LaunchCommand
 } from '../components/index.js'
 
-// Определяем тип сущности
 export type Entity = {
   position?: Position
   velocity?: Velocity
@@ -44,5 +37,4 @@ export type Entity = {
   uiElement?: UIElement
 }
 
-// Создаем мир Miniplex
 export const world = new World<Entity>()
