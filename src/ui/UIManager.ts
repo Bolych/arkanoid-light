@@ -20,12 +20,18 @@ export class UIManager {
     bg.fill({ color: 0x000000, alpha: 0.8 })
     overlay.addChild(bg)
 
+    const baseWidth = 600
+    const baseHeight = 800
+    const scaleX = this.sceneWidth / baseWidth
+    const scaleY = this.sceneHeight / baseHeight
+    const scale = Math.min(scaleX, scaleY)
+
     const titleStyle = new TextStyle({
       fontFamily: 'Arial, sans-serif',
-      fontSize: 48,
+      fontSize: Math.round(48 * scale),
       fontWeight: 'bold',
       fill: 0xFFFFFF,
-      stroke: { color: 0x000000, width: 4 },
+      stroke: { color: 0x000000, width: Math.max(2, Math.round(4 * scale)) },
     })
 
     const title = new Text({
@@ -34,14 +40,14 @@ export class UIManager {
     })
     title.anchor.set(0.5)
     title.x = this.sceneWidth / 2
-    title.y = 60
+    title.y = this.sceneHeight * 0.08
     overlay.addChild(title)
 
     const scoreStyle = new TextStyle({
       fontFamily: 'Arial, sans-serif',
-      fontSize: 28,
+      fontSize: Math.round(28 * scale),
       fill: 0xFFFF00,
-      stroke: { color: 0x000000, width: 3 },
+      stroke: { color: 0x000000, width: Math.max(1, Math.round(3 * scale)) },
     })
 
     const playerScoreText = new Text({
@@ -50,32 +56,33 @@ export class UIManager {
     })
     playerScoreText.anchor.set(0.5)
     playerScoreText.x = this.sceneWidth / 2
-    playerScoreText.y = 130
+    playerScoreText.y = this.sceneHeight * 0.16
     overlay.addChild(playerScoreText)
 
     const leaderboardTitle = new Text({
       text: 'ТОП-5 ИГРОКОВ',
       style: new TextStyle({
         fontFamily: 'Arial, sans-serif',
-        fontSize: 32,
+        fontSize: Math.round(32 * scale),
         fontWeight: 'bold',
         fill: 0xFFFFFF,
-        stroke: { color: 0x000000, width: 3 },
+        stroke: { color: 0x000000, width: Math.max(1, Math.round(3 * scale)) },
       })
     })
     leaderboardTitle.anchor.set(0.5)
     leaderboardTitle.x = this.sceneWidth / 2
-    leaderboardTitle.y = 200
+    leaderboardTitle.y = this.sceneHeight * 0.25
     overlay.addChild(leaderboardTitle)
 
     const topScores = this.leaderboardManager.getTopScores()
     const entryStyle = new TextStyle({
       fontFamily: 'Arial, sans-serif',
-      fontSize: 22,
+      fontSize: Math.round(22 * scale),
       fill: 0xFFFFFF,
-      stroke: { color: 0x000000, width: 2 },
+      stroke: { color: 0x000000, width: Math.max(1, Math.round(2 * scale)) },
     })
 
+    const entrySpacing = this.sceneHeight * 0.05
     topScores.forEach((entry, index) => {
       const text = new Text({
         text: `${index + 1}. ${entry.name} - ${entry.score} очков`,
@@ -83,7 +90,7 @@ export class UIManager {
       })
       text.anchor.set(0.5)
       text.x = this.sceneWidth / 2
-      text.y = 260 + index * 40
+      text.y = this.sceneHeight * 0.32 + index * entrySpacing
       overlay.addChild(text)
     })
 
@@ -91,14 +98,14 @@ export class UIManager {
       text: 'Нажмите ПРОБЕЛ для новой игры',
       style: new TextStyle({
         fontFamily: 'Arial, sans-serif',
-        fontSize: 20,
+        fontSize: Math.round(20 * scale),
         fill: 0xAAAAAA,
-        stroke: { color: 0x000000, width: 2 },
+        stroke: { color: 0x000000, width: Math.max(1, Math.round(2 * scale)) },
       })
     })
     restartText.anchor.set(0.5)
     restartText.x = this.sceneWidth / 2
-    restartText.y = this.sceneHeight - 50
+    restartText.y = this.sceneHeight * 0.94
     overlay.addChild(restartText)
 
     return overlay
