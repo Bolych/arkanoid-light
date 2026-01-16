@@ -11,10 +11,7 @@ export class World<T extends Record<string, any>> {
   }
   
   remove(entity: T): void {
-    const index = this.entities.indexOf(entity)
-    if (index > -1) {
-      this.entities.splice(index, 1)
-    }
+    this.entities = this.entities.filter(e => e !== entity)
   }
   
   with<K extends keyof T>(...componentNames: K[]): T[] {
@@ -48,10 +45,7 @@ export class World<T extends Record<string, any>> {
   }
 
   removeSystem(system: System): void {
-    const index = this.systems.indexOf(system)
-    if (index > -1) {
-      this.systems.splice(index, 1)
-    }
+    this.systems = this.systems.filter(s => s !== system)
   }
 
   update(deltaTime?: number): void {

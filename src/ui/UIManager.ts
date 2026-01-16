@@ -2,7 +2,6 @@ import { Container, Text, TextStyle, Graphics } from 'pixi.js'
 import { LeaderboardManager } from '../LeaderboardManager'
 
 export class UIManager {
-  private container: Container
   private leaderboardManager: LeaderboardManager
   private sceneWidth: number
   private sceneHeight: number
@@ -11,7 +10,6 @@ export class UIManager {
     this.sceneWidth = sceneWidth
     this.sceneHeight = sceneHeight
     this.leaderboardManager = leaderboardManager
-    this.container = new Container()
   }
 
   public showGameOver(playerName: string, finalScore: number): Container {

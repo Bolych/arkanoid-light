@@ -1,7 +1,0 @@
-export { createPaddle } from './createPaddle'
-export { createBall } from './createBall'
-export { createBrick } from './createBrick'
-export { createBricks } from './createBricks'
-export { createScore } from './createScore'
-export { createGameState } from './createGameState'
-export { getRandomBrickType } from './utils'

@@ -1,35 +1,20 @@
 import type { Application } from 'pixi.js'
 import type { World } from '../ecs/World'
-import type { Entity } from '../ecs/entities/index.js'
-import { createPaddle, createBall, createBricks, createScore, createGameState } from '../ecs/entities/factories'
+import type { Entity } from '../ecs/components'
+import { createPaddle, createBall, createBricks, createScore, createGameState } from '../ecs/entities'
 
-type GameSpawnerDeps = {
-  world: World<Entity>
-  app: Application
-}
+export function populateWorld(world: World<Entity>, app: Application): void {
+  createGameState(world)
 
-export class GameSpawner {
-  private world: World<Entity>
-  private app: Application
+  const score = createScore(world, app.screen.width, app.screen.height)
+  app.stage.addChild(score.uiElement!.container)
 
-  constructor({ world, app }: GameSpawnerDeps) {
-    this.world = world
-    this.app = app
-  }
+  const paddle = createPaddle(world, app.screen.width, app.screen.height)
+  app.stage.addChild(paddle.visual!.graphics)
 
-  public populate(): void {
-    createGameState(this.world)
+  const ball = createBall(world, app.screen.width, app.screen.height)
+  app.stage.addChild(ball.visual!.graphics)
 
-    const scoreEntity = createScore(this.world, this.app.screen.width, this.app.screen.height)
-    this.app.stage.addChild(scoreEntity.uiElement!.container)
-
-    const paddleEntity = createPaddle(this.world, this.app.screen.width, this.app.screen.height)
-    this.app.stage.addChild(paddleEntity.visual!.graphics)
-
-    const ballEntity = createBall(this.world, this.app.screen.width, this.app.screen.height)
-    this.app.stage.addChild(ballEntity.visual!.graphics)
-
-    const bricks = createBricks(this.world, this.app.screen.width, this.app.screen.height)
-    bricks.forEach(brick => this.app.stage.addChild(brick.visual!.graphics))
-  }
+  const bricks = createBricks(world, app.screen.width, app.screen.height)
+  bricks.forEach(brick => app.stage.addChild(brick.visual!.graphics))
 }

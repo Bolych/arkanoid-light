@@ -1,57 +1,45 @@
 import { Container, Application } from 'pixi.js'
-import type { Entity } from '../ecs/entities/index.js'
-import { createBricks } from '../ecs/entities/factories'
 import type { World } from '../ecs/World'
+import type { Entity } from '../ecs/components'
+import type { GameSystem } from '../ecs/systems/GameSystem'
 import type { UIManager } from '../ui/UIManager.js'
 import type { LeaderboardManager } from '../LeaderboardManager'
-import type { GameStateSystem } from '../ecs/systems/GameStateSystem'
-import type { ScoreSystem } from '../ecs/systems/ScoreSystem'
-
-type GameFlowDeps = {
-  world: World<Entity>
-  app: Application
-  uiManager: UIManager
-  leaderboardManager: LeaderboardManager
-  gameStateSystem: GameStateSystem
-  scoreSystem: ScoreSystem
-}
+import { createBricks } from '../ecs/entities'
 
 export class GameFlowController {
   private world: World<Entity>
   private app: Application
   private uiManager: UIManager
   private leaderboardManager: LeaderboardManager
-  private gameStateSystem: GameStateSystem
-  private scoreSystem: ScoreSystem
+  private gameSystem: GameSystem
   private gameOverOverlay: Container | null = null
 
-  constructor({
-    world,
-    app,
-    uiManager,
-    leaderboardManager,
-    gameStateSystem,
-    scoreSystem
-  }: GameFlowDeps) {
+  constructor(
+    world: World<Entity>,
+    app: Application,
+    uiManager: UIManager,
+    leaderboardManager: LeaderboardManager,
+    gameSystem: GameSystem
+  ) {
     this.world = world
     this.app = app
     this.uiManager = uiManager
     this.leaderboardManager = leaderboardManager
-    this.gameStateSystem = gameStateSystem
-    this.scoreSystem = scoreSystem
+    this.gameSystem = gameSystem
   }
 
   public showPlayerInputModal(): void {
+    this.app.stage.visible = false
     this.uiManager.showPlayerInputModal((playerName: string) => {
       this.onPlayerNameEntered(playerName)
     })
   }
 
   public endGame(): void {
-    this.gameStateSystem.endGame()
+    this.gameSystem.endGame()
     
-    const playerName = this.gameStateSystem.getPlayerName()
-    const finalScore = this.scoreSystem.getScore()
+    const playerName = this.gameSystem.getPlayerName()
+    const finalScore = this.gameSystem.getScore()
     this.leaderboardManager.saveScore(playerName, finalScore)
 
     this.gameOverOverlay = this.uiManager.showGameOver(playerName, finalScore)
@@ -64,7 +52,7 @@ export class GameFlowController {
       this.gameOverOverlay = null
     }
 
-    this.scoreSystem.reset()
+    this.gameSystem.resetScore()
 
     const bricks = this.world.with('brick', 'visual')
     bricks.forEach((brick: Entity) => {
@@ -82,13 +70,13 @@ export class GameFlowController {
       balls[0].velocity!.y = 0
     }
 
-    this.gameStateSystem.startNewGame()
+    this.gameSystem.startNewGame()
     this.showPlayerInputModal()
   }
 
   private onPlayerNameEntered(playerName: string): void {
-    this.gameStateSystem.setPlayerName(playerName)
-    this.scoreSystem.setPlayerName(playerName)
-    this.gameStateSystem.startPlaying()
+    this.app.stage.visible = true
+    this.gameSystem.setPlayerName(playerName)
+    this.gameSystem.startPlaying()
   }
 }

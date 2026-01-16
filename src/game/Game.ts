@@ -3,38 +3,33 @@ import { LeaderboardManager } from '../LeaderboardManager'
 import { UIManager } from '../ui/UIManager.js'
 import { GameInputHandler } from './GameInputHandler.js'
 import { GameFlowController } from './GameFlowController.js'
-import { ResizeManager } from '../platform/ResizeManager.ts'
-import { GameSpawner } from './GameSpawner.js'
+import { getGameSize, setupResize } from '../platform/ResizeManager.ts'
+import { populateWorld } from './GameSpawner.js'
 import { setupGameSystems } from './GameSystems.js'
-import { world } from '../ecs/entities/index.js'
-import type { Entity } from '../ecs/entities/index.js'
+import type { Entity } from '../ecs/components'
 import { World } from '../ecs/World'
 import { GAME_CONFIG } from '../constants'
-import type { ScoreSystem, GameStateSystem } from '../ecs/systems'
+import type { GameSystem } from '../ecs/systems'
 
 export class Game {
 
   public app: Application
-  
   public world: World<Entity>
 
   private leaderboardManager!: LeaderboardManager
   private uiManager!: UIManager
   private gameInputHandler!: GameInputHandler
-  private resizeManager!: ResizeManager
   private flowController!: GameFlowController
-  private spawner!: GameSpawner
 
-  private gameStateSystem!: GameStateSystem
-  private scoreSystem!: ScoreSystem
+  private gameSystem!: GameSystem
 
   constructor() {
     this.app = new Application()
-    this.world = world
+    this.world = new World<Entity>()
   }
 
-  async init(): Promise<void> {
-    const { width, height } = ResizeManager.getGameSize()
+  async setup(): Promise<void> {
+    const { width, height } = getGameSize()
 
     await this.app.init({
       width,
@@ -47,33 +42,30 @@ export class Game {
 
     this.leaderboardManager = new LeaderboardManager()
     this.uiManager = new UIManager(this.app.screen.width, this.app.screen.height, this.leaderboardManager)
-    this.resizeManager = new ResizeManager({ app: this.app, world: this.world, uiManager: this.uiManager })
-    this.resizeManager.setupEventListener()
+    
+    setupResize(this.app, this.world, this.uiManager)
   }
 
   run(): void {
-    this.spawner = new GameSpawner({ world: this.world, app: this.app })
-    this.spawner.populate()
+    populateWorld(this.world, this.app)
     this.setupSystems()
 
-    this.flowController = new GameFlowController({
-      world: this.world,
-      app: this.app,
-      uiManager: this.uiManager,
-      leaderboardManager: this.leaderboardManager,
-      gameStateSystem: this.gameStateSystem,
-      scoreSystem: this.scoreSystem
-    })
+    this.flowController = new GameFlowController(
+      this.world,
+      this.app,
+      this.uiManager,
+      this.leaderboardManager,
+      this.gameSystem
+    )
 
-    // Ensure visuals are positioned before the game starts.
     this.world.update(0)
 
-    this.gameInputHandler = new GameInputHandler({
-      world: this.world,
-      app: this.app,
-      onRestartGame: () => this.flowController.restartGame(),
-      getGameState: () => this.gameStateSystem.getState()
-    })
+    this.gameInputHandler = new GameInputHandler(
+      this.world,
+      this.app,
+      () => this.flowController.restartGame(),
+      () => this.gameSystem.getState()
+    )
     this.gameInputHandler.setupEventListeners()
 
     this.flowController.showPlayerInputModal()
@@ -82,17 +74,15 @@ export class Game {
   }
 
   private setupSystems(): void {
-    const { scoreSystem, gameStateSystem } = setupGameSystems({
-      world: this.world,
-      app: this.app,
-      onGameEnd: () => this.flowController.endGame()
-    })
-    this.scoreSystem = scoreSystem
-    this.gameStateSystem = gameStateSystem
+    this.gameSystem = setupGameSystems(
+      this.world,
+      this.app,
+      () => this.flowController.endGame()
+    )
   }
 
   private gameLoop(deltaTime: number): void {
-    if (this.gameStateSystem.getState() !== 'PLAYING') {
+    if (this.gameSystem.getState() !== 'PLAYING') {
       return
     }
     this.world.update(deltaTime)

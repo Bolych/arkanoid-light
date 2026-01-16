@@ -1,5 +1,5 @@
 import { World, type System } from '../World'
-import type { Entity } from '../entities/index.js'
+import type { Entity } from '../components'
 import { GAME_CONFIG } from '../../constants'
 
 export class CollisionSystem implements System {

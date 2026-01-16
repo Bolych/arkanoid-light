@@ -1,6 +1,6 @@
 import { World, type System } from '../World'
-import type { Entity } from '../entities/index.js'
-import { UI_LAYOUT } from '../../constants'
+import type { Entity } from '../components'
+import { GAME_CONFIG, UI_LAYOUT } from '../../constants'
 
 interface InputEvent {
   type: 'keydown' | 'keyup' | 'pointermove' | 'pointerdown' | 'pointerup' | 'pointerleave'
@@ -9,7 +9,7 @@ interface InputEvent {
   clientY?: number
 }
 
-export class InputSystem implements System {
+export class MovementSystem implements System {
   private world: World<Entity>
   private canvasElement: HTMLCanvasElement
   private sceneWidth: number
@@ -25,7 +25,6 @@ export class InputSystem implements System {
   }
 
   private setupEventListeners(): void {
-
     window.addEventListener('keydown', (e) => {
       if (e.code !== 'Space' && e.key !== ' ') {
         this.inputBuffer.push({ type: 'keydown', key: e.code })
@@ -73,7 +72,14 @@ export class InputSystem implements System {
     })
   }
 
-  public update(): void {
+  public update(deltaTime?: number): void {
+    this.processInput()
+    this.updatePaddleMovement(deltaTime)
+    this.updateBallMovement(deltaTime)
+    this.processBallLaunch()
+  }
+
+  private processInput(): void {
     const paddleQuery = this.world.with('paddle', 'keyboardInput', 'size')
 
     for (const event of this.inputBuffer) {
@@ -150,6 +156,109 @@ export class InputSystem implements System {
     }
     const canvasY = (clientY - rect.top) * (this.sceneHeight / rect.height)
     return canvasY > UI_LAYOUT.SCORE_PANEL_HEIGHT
+  }
+
+  private updatePaddleMovement(deltaTime?: number): void {
+    const timeScale = deltaTime ? deltaTime / 16.6667 : 1
+    const paddleQuery = this.world.with('paddle', 'position', 'size', 'keyboardInput', 'sceneBounds')
+
+    for (const entity of paddleQuery) {
+      const paddle = entity.paddle!
+      const position = entity.position!
+      const size = entity.size!
+      const keys = entity.keyboardInput!.keys
+      const bounds = entity.sceneBounds!
+
+      if (paddle.touchTargetX !== null) {
+        const diff = paddle.touchTargetX - position.x
+        const moveSpeed = paddle.speed * 1.5 * timeScale
+
+        if (Math.abs(diff) > 2) {
+          if (diff > 0) {
+            position.x += Math.min(moveSpeed, diff)
+          } else {
+            position.x += Math.max(-moveSpeed, diff)
+          }
+        } else {
+          position.x = paddle.touchTargetX
+        }
+      } else {
+        if (keys['ArrowLeft'] || keys['KeyA']) {
+          position.x -= paddle.speed * timeScale
+        }
+        if (keys['ArrowRight'] || keys['KeyD']) {
+          position.x += paddle.speed * timeScale
+        }
+      }
+
+      if (position.x < 0) {
+        position.x = 0
+      }
+      if (position.x + size.width > bounds.width) {
+        position.x = bounds.width - size.width
+      }
+    }
+  }
+
+  private updateBallMovement(deltaTime?: number): void {
+    const timeScale = deltaTime ? deltaTime / 16.6667 : 1
+    const ballQuery = this.world.with('ball', 'position', 'velocity', 'radius', 'sceneBounds')
+    const paddleQuery = this.world.with('paddle', 'position', 'size')
+
+    for (const ball of ballQuery) {
+      const ballComp = ball.ball!
+      const pos = ball.position!
+      const vel = ball.velocity!
+      const radius = ball.radius!.value
+      const bounds = ball.sceneBounds!
+
+      if (!ballComp.isLaunched) {
+        for (const paddle of paddleQuery) {
+          const paddlePos = paddle.position!
+          const paddleSize = paddle.size!
+          pos.x = paddlePos.x + paddleSize.width / 2
+          pos.y = paddlePos.y - radius - 2
+        }
+        continue
+      }
+
+      pos.x += vel.x * timeScale
+      pos.y += vel.y * timeScale
+
+      if (pos.x - radius <= 0) {
+        pos.x = radius
+        vel.x = Math.abs(vel.x)
+      } else if (pos.x + radius >= bounds.width) {
+        pos.x = bounds.width - radius
+        vel.x = -Math.abs(vel.x)
+      }
+
+      if (pos.y - radius <= 0) {
+        pos.y = radius
+        vel.y = Math.abs(vel.y)
+      }
+    }
+  }
+
+  private processBallLaunch(): void {
+    const ballsToLaunch = this.world.with('ball', 'velocity', 'launchCommand')
+
+    for (const ball of ballsToLaunch) {
+      if (!ball.ball!.isLaunched) {
+        this.launchBall(ball)
+      }
+
+      this.world.removeComponent(ball, 'launchCommand')
+    }
+  }
+
+  private launchBall(ball: Entity): void {
+    ball.ball!.isLaunched = true
+    
+    const randomDirection = Math.random() > 0.5 ? 1 : -1
+    
+    ball.velocity!.x = GAME_CONFIG.BALL_SPEED * randomDirection * 0.7
+    ball.velocity!.y = -GAME_CONFIG.BALL_SPEED
   }
 
   public resize(newSceneWidth: number, newSceneHeight: number): void {

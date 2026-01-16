@@ -1,6 +1,6 @@
 import type { Application } from 'pixi.js'
 import type { World } from '../ecs/World'
-import type { Entity } from '../ecs/entities/index.js'
+import type { Entity } from '../ecs/components'
 import { UI_LAYOUT } from '../constants'
 
 export class GameInputHandler {
@@ -8,29 +8,33 @@ export class GameInputHandler {
   private app: Application
   private onRestartGame?: () => void
   private getGameState?: () => string
+  
+  private handleKeyDownBound = this.handleKeyDown.bind(this)
+  private handleTouchStartBound = this.handleTouchStart.bind(this)
+  private handleClickBound = this.handleClick.bind(this)
 
-  constructor(callbacks: {
-    world: World<Entity>
-    app: Application
-    onRestartGame?: () => void
+  constructor(
+    world: World<Entity>,
+    app: Application,
+    onRestartGame?: () => void,
     getGameState?: () => string
-  }) {
-    this.world = callbacks.world
-    this.app = callbacks.app
-    this.onRestartGame = callbacks.onRestartGame
-    this.getGameState = callbacks.getGameState
+  ) {
+    this.world = world
+    this.app = app
+    this.onRestartGame = onRestartGame
+    this.getGameState = getGameState
   }
 
   public setupEventListeners(): void {
-    window.addEventListener('keydown', (e) => this.handleKeyDown(e))
-    window.addEventListener('touchstart', (e) => this.handleTouchStart(e))
-    window.addEventListener('click', (e) => this.handleClick(e))
+    window.addEventListener('keydown', this.handleKeyDownBound)
+    window.addEventListener('touchstart', this.handleTouchStartBound)
+    window.addEventListener('click', this.handleClickBound)
   }
 
   public destroy(): void {
-    window.removeEventListener('keydown', (e) => this.handleKeyDown(e))
-    window.removeEventListener('touchstart', (e) => this.handleTouchStart(e))
-    window.removeEventListener('click', (e) => this.handleClick(e))
+    window.removeEventListener('keydown', this.handleKeyDownBound)
+    window.removeEventListener('touchstart', this.handleTouchStartBound)
+    window.removeEventListener('click', this.handleClickBound)
   }
 
   private handleKeyDown(e: KeyboardEvent): void {
