@@ -4,12 +4,17 @@ import { UIManager } from '../ui/UIManager.js'
 import { GameInputHandler } from './GameInputHandler.js'
 import { GameFlowController } from './GameFlowController.js'
 import { getGameSize, setupResize } from '../platform/ResizeManager.ts'
-import { populateWorld } from './GameSpawner.js'
-import { setupGameSystems } from './GameSystems.js'
+import { createPaddle, createBall, createBricks, createScore, createGameState } from '../ecs/entities'
 import type { Entity } from '../ecs/components'
 import { World } from '../ecs/World'
 import { GAME_CONFIG } from '../constants'
-import type { GameSystem } from '../ecs/systems'
+import {
+  MovementSystem,
+  GameSystem,
+  CollisionSystem,
+  RenderSystem,
+  ResizeSystem
+} from '../ecs/systems'
 
 export class Game {
 
@@ -47,7 +52,7 @@ export class Game {
   }
 
   run(): void {
-    populateWorld(this.world, this.app)
+    this.populateWorld()
     this.setupSystems()
 
     this.flowController = new GameFlowController(
@@ -73,12 +78,34 @@ export class Game {
     this.app.ticker.add((ticker) => this.gameLoop(ticker.deltaMS))
   }
 
+  private populateWorld(): void {
+    createGameState(this.world)
+
+    const score = createScore(this.world, this.app.screen.width, this.app.screen.height)
+    this.app.stage.addChild(score.uiElement!.container)
+
+    const paddle = createPaddle(this.world, this.app.screen.width, this.app.screen.height)
+    this.app.stage.addChild(paddle.visual!.graphics)
+
+    const ball = createBall(this.world, this.app.screen.width, this.app.screen.height)
+    this.app.stage.addChild(ball.visual!.graphics)
+
+    const bricks = createBricks(this.world, this.app.screen.width, this.app.screen.height)
+    bricks.forEach(brick => this.app.stage.addChild(brick.visual!.graphics))
+  }
+
   private setupSystems(): void {
-    this.gameSystem = setupGameSystems(
-      this.world,
-      this.app,
-      () => this.flowController.endGame()
-    )
+    this.gameSystem = new GameSystem(this.world)
+
+    this.world.addSystem(new MovementSystem(this.world, this.app.canvas, this.app.screen.width, this.app.screen.height))
+    this.world.addSystem(new CollisionSystem(this.world, {
+      onBrickDestroyed: (points) => this.gameSystem.addPoints(points),
+      onBallLost: () => this.flowController.endGame(),
+      onAllBricksDestroyed: () => this.flowController.endGame()
+    }))
+    this.world.addSystem(this.gameSystem)
+    this.world.addSystem(new RenderSystem(this.world))
+    this.world.addSystem(new ResizeSystem(this.world))
   }
 
   private gameLoop(deltaTime: number): void {
